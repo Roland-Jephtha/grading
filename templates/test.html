@@ -1,0 +1,1239 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+
+
+{% block content %}
+
+
+
+
+
+
+        <div class="content-body  ">
+				<div class="container-fluid">
+
+
+
+
+
+		<div class="form-head d-flex flex-wrap mb-sm-4 mb-3 align-items-center">
+			<div class="me-auto  d-lg-block mb-3">
+				<h2 class="text-black mb-0 font-w700">View {{profile.department}} Student Grades</h2>
+			</div>
+
+
+
+
+		
+		</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<div class="row">
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header pb-0 border-0">
+                                <h4 class="card-title mb-0">Submitted Grades</h4>
+                            </div>
+                            <br> 
+
+                            <!-- Course Selection Filters -->
+                            <div class="px-3 pb-3">
+                                <div class="bg-light rounded p-3 mb-3">
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-md-2">
+                                            <h6 class="mb-0 text-muted">
+                                                <i class="fas fa-filter me-2"></i>Select Course:
+                                            </h6>
+                                        </div>
+
+                                        <!-- Level Filter -->
+                                        <div class="col-md-2">
+                                            <div class="position-relative">
+                                                <label class="form-label mb-1 text-muted small">
+                                                    <i class="fas fa-layer-group me-1"></i>Level
+                                                </label>
+                                                <select id="levelFilter" class="form-select form-select-sm">
+                                                    <option value="">All Levels</option>
+                                                    {% for lvl in levels %}
+                                                            <option value="{{ lvl.name }}">{{ lvl.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Semester Filter -->
+                                        <div class="col-md-2">
+                                            <div class="position-relative">
+                                                <label class="form-label mb-1 text-muted small">
+                                                    <i class="fas fa-calendar me-1"></i>Semester
+                                                </label>
+                                                <select id="semesterFilter" class="form-select form-select-sm">
+                                                    <option value="">All Semesters</option>
+                                                    {% for sem in semesters %}
+                                                            <option value="{{ sem.name }}">{{ sem.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Course Filter -->
+                                        <div class="col-md-4">
+                                            <div class="position-relative">
+                                                <label class="form-label mb-1 text-muted small">
+                                                    <i class="fas fa-book me-1"></i>Course <span id="courseCount" class="badge bg-secondary ms-1" style="display: none;">0</span>
+                                                </label>
+                                                <select id="courseFilter" class="form-select form-select-sm">
+                                                    <option value="">Select a Course</option>
+                                                    <!-- Courses will be populated dynamically -->
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Navigation Buttons -->
+                                        <div class="col-md-2">
+                                            <div class="d-flex gap-1">
+                                     
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()" title="Clear all filters">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Course Navigation Info -->
+                                    <div class="row mt-2" id="courseNavInfo" style="display: none;">
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <span id="currentCourseInfo"></span>
+                                                </small>
+                                                <small class="text-muted">
+                                                    Course <span id="currentCourseIndex">0</span> of <span id="totalCourses">0</span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Single Course Display -->
+                            <div class="card-body">
+                                <!-- Default State - No Course Selected -->
+                                <div id="defaultState" class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-search fa-4x text-muted"></i>
+                                    </div>
+                                    <h5 class="text-muted">Select a Course to View Grades</h5>
+                                    <p class="text-muted">Use the filters above to select Level, Semester, and Course to view student grades.</p>
+                                </div>
+
+                                <!-- Course Display Container -->
+                                <div id="courseDisplay" style="display: none;">
+                                    <div class="grade-group mb-4" style="border: 1px solid #e3e6f0; border-radius: 10px; background: #f8f9fc; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                        <!-- Course Header -->
+                                        <div class="course-header p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px 10px 0 0;">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-9">
+                                                    <h4 class="text-white mb-1" id="courseTitle">
+                                                        <i class="fas fa-book me-2"></i><span></span>
+                                                    </h4>
+                                                    <p class="text-white-50 mb-0" id="courseDetails">
+                                                        <small></small>
+                                                    </p>
+                                                </div>
+                                                <div class="col-md-3 text-end">
+                                                    <span class="badge bg-light text-dark fs-6 px-3 py-2" id="studentCount">
+                                                        <i class="fas fa-users me-1"></i>
+                                                        <span>0</span> Students
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Course Content -->
+                                        <div class="course-content p-3">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover table-sm mb-0" id="gradesTable">
+                                                    <thead style="background-color: #f1f3f4;">
+                                                        <tr>
+                                                            <th style="width: 5%; border: none;">#</th>
+                                                            <th style="width: 25%; border: none;">
+                                                                <i class="fas fa-user me-1 text-primary"></i>Student Name
+                                                            </th>
+                                                            <th style="width: 15%; border: none;">
+                                                                <i class="fas fa-id-card me-1 text-info"></i>Matric No
+                                                            </th>
+                                                            <th style="width: 10%; border: none;">
+                                                                <i class="fas fa-layer-group me-1 text-warning"></i>Level
+                                                            </th>
+                                                            <th style="width: 12%; border: none;">
+                                                                <i class="fas fa-calendar me-1 text-secondary"></i>Semester
+                                                            </th>
+                                                            <th style="width: 8%; border: none;">
+                                                                <i class="fas fa-chart-line me-1 text-success"></i>Score
+                                                            </th>
+                                                            <th style="width: 8%; border: none;">
+                                                                <i class="fas fa-medal me-1 text-danger"></i>Grade
+                                                            </th>
+                                                            <th style="width: 17%; border: none;">
+                                                                <i class="fas fa-chalkboard-teacher me-1 text-dark"></i>Lecturer
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="gradesTableBody">
+                                                        <!-- Grades will be populated dynamically -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Course Actions -->
+                                            <div class="mt-3 p-2 bg-light rounded d-flex justify-content-between align-items-center">
+                                                <div id="courseInfo">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        <span></span>
+                                                    </small>
+                                                </div>
+                                                <div>
+                                                    <form method="post" action="#" class="d-inline" id="approveForm">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-success btn-sm px-3" id="approveBtn">
+                                                            <i class="fa fa-check-circle me-1"></i>
+                                                            Approve All Grades
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- No Grades State -->
+                                <div id="noGradesState" class="text-center py-5" style="display: none;">
+                                    <div class="mb-3">
+                                        <i class="fas fa-inbox fa-4x text-muted"></i>
+                                    </div>
+                                    <h5 class="text-muted">No Grades Found</h5>
+                                    <p class="text-muted">No grades have been submitted for the selected course.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+		</div>	
+	
+	</div>
+	
+        </div>
+
+
+
+
+
+
+            <style>
+                .grade-group {
+                    transition: all 0.3s ease;
+                }
+                .grade-group:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+                }
+                .course-header {
+                    position: relative;
+                    overflow: hidden;
+                }
+                .course-header::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+                    pointer-events: none;
+                }
+                .grade-row:hover {
+                    background-color: #f8f9fa !important;
+                }
+                .avatar-title {
+                    font-size: 12px;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .table th {
+                    font-weight: 600;
+                    font-size: 13px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .badge {
+                    font-size: 11px;
+                }
+                .course-content {
+                    position: relative;
+                }
+                .empty-state {
+                    animation: fadeIn 0.5s ease-in;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            </style>
+
+            <!-- Data for JavaScript -->
+            <script type="application/json" id="grades-data">
+                [
+                    {% for grade in grades %}
+                    {
+                        "id": {{ grade.id }},
+                        "student_name": "{{ grade.student.full_name|escapejs }}",
+                        "matric_number": "{{ grade.student.matric_number }}",
+                        "level": "{{ grade.student.level.name }}",
+                        "semester": "{{ grade.semester.name }}",
+                        "score": {{ grade.score }},
+                        "grade": "{{ grade.grade }}",
+                        "lecturer": "{{ grade.lecturer.user.username|escapejs }}",
+                        "course": {
+                            "id": {{ grade.course.id }},
+                            "title": "{{ grade.course.title|escapejs }}",
+                            "code": "{{ grade.course.code }}",
+                            "credit_unit": "{{ grade.course.credit_unit }}",
+                            "level": "{{ grade.course.level.name }}",
+                            "semester": "{{ grade.course.semester.name }}"
+                        }
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            </script>
+
+            <script type="application/json" id="courses-data">
+                [
+                    {% for course in courses %}
+                    {
+                        "id": {{ course.id }},
+                        "title": "{{ course.title|escapejs }}",
+                        "code": "{{ course.code }}",
+                        "credit_unit": "{{ course.credit_unit }}",
+                        "level": "{{ course.level.name }}",
+                        "semester": "{{ course.semester.name }}"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            </script>
+
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Load data from JSON scripts
+                const allGrades = JSON.parse(document.getElementById('grades-data').textContent || '[]');
+                const allCourses = JSON.parse(document.getElementById('courses-data').textContent || '[]');
+
+                const levelFilter = document.getElementById("levelFilter");
+                const semesterFilter = document.getElementById("semesterFilter");
+                const courseFilter = document.getElementById("courseFilter");
+
+                let filteredCourses = [];
+                let currentCourseIndex = 0;
+
+                // Update course dropdown based on level and semester
+                function updateCourseDropdown() {
+                    const selectedLevel = levelFilter.value;
+                    const selectedSemester = semesterFilter.value;
+
+                    courseFilter.innerHTML = '<option value="">Select a Course</option>';
+
+                    // Filter courses based on selected level and/or semester
+                    filteredCourses = allCourses.filter(course => {
+                        const levelMatch = !selectedLevel || course.level === selectedLevel;
+                        const semesterMatch = !selectedSemester || course.semester === selectedSemester;
+                        return levelMatch && semesterMatch;
+                    });
+
+                    // Populate course dropdown
+                    filteredCourses.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = `${course.title} (${course.code}) - ${course.level} ${course.semester}`;
+                        courseFilter.appendChild(option);
+                    });
+
+                    // Update course count badge
+                    const courseCount = document.getElementById('courseCount');
+                    if (filteredCourses.length > 0) {
+                        courseCount.textContent = filteredCourses.length;
+                        courseCount.style.display = 'inline';
+                    } else {
+                        courseCount.style.display = 'none';
+                    }
+
+                    updateNavigationButtons();
+
+                    // If no courses match the filter, show default state
+                    if (filteredCourses.length === 0 && (selectedLevel || selectedSemester)) {
+                        showDefaultState();
+                        // Update default state message
+                        const defaultState = document.getElementById('defaultState');
+                        defaultState.innerHTML = `
+                            <div class="mb-3">
+                                <i class="fas fa-search fa-4x text-muted"></i>
+                            </div>
+                            <h5 class="text-muted">No Courses Found</h5>
+                            <p class="text-muted">No courses match the selected Level and Semester criteria.</p>
+                            <button class="btn btn-outline-primary btn-sm" onclick="clearFilters()">
+                                <i class="fas fa-times me-1"></i>Clear Filters
+                            </button>
+                        `;
+                    } else if (filteredCourses.length === 0) {
+                        // Reset to original default state
+                        const defaultState = document.getElementById('defaultState');
+                        defaultState.innerHTML = `
+                            <div class="mb-3">
+                                <i class="fas fa-search fa-4x text-muted"></i>
+                            </div>
+                            <h5 class="text-muted">Select a Course to View Grades</h5>
+                            <p class="text-muted">Use the filters above to select Level, Semester, and Course to view student grades.</p>
+                        `;
+                        showDefaultState();
+                    }
+                }
+
+                // Display selected course
+                function displayCourse(courseId) {
+                    const course = allCourses.find(c => c.id == courseId);
+                    if (!course) return;
+
+                    const courseGrades = allGrades.filter(grade => grade.course.id == courseId);
+
+                    if (courseGrades.length === 0) {
+                        showNoGradesState();
+                        return;
+                    }
+
+                    // Update course header
+                    document.getElementById('courseTitle').querySelector('span').textContent = course.title;
+                    document.getElementById('courseDetails').querySelector('small').innerHTML = `
+                        <i class="fas fa-code me-1"></i><strong>${course.code}</strong> |
+                        <i class="fas fa-layer-group me-1"></i>${course.level} |
+                        <i class="fas fa-calendar me-1"></i>${course.semester} |
+                        <i class="fas fa-credit-card me-1"></i>${course.credit_unit} Units
+                    `;
+                    document.getElementById('studentCount').querySelector('span').textContent = courseGrades.length;
+
+                    // Update course info
+                    document.getElementById('courseInfo').querySelector('span').innerHTML =
+                        `<strong>${course.title}</strong> (${course.code}) - ${course.credit_unit} Units`;
+
+                    // Update approve form action
+                    document.getElementById('approveForm').action = `/department/approve/${course.id}/`;
+                    document.getElementById('approveBtn').onclick = function() {
+                        return confirm(`Are you sure you want to approve all grades for ${course.title}?`);
+                    };
+
+                    // Populate grades table
+                    const tbody = document.getElementById('gradesTableBody');
+                    tbody.innerHTML = '';
+
+                    courseGrades.forEach((grade, index) => {
+                        const row = document.createElement('tr');
+                        row.className = 'grade-row';
+                        row.style.borderBottom = '1px solid #f0f0f0';
+
+                        const getScoreColor = (score) => {
+                            if (score >= 70) return 'text-success';
+                            if (score >= 60) return 'text-primary';
+                            if (score >= 50) return 'text-warning';
+                            return 'text-danger';
+                        };
+
+                        const getGradeColor = (grade) => {
+                            switch(grade) {
+                                case 'A': return 'bg-success';
+                                case 'B': return 'bg-primary';
+                                case 'C': return 'bg-warning text-dark';
+                                case 'D': return 'bg-orange text-white';
+                                default: return 'bg-danger';
+                            }
+                        };
+
+                        row.innerHTML = `
+                            <td><strong class="text-muted">${index + 1}</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2" style="width: 32px; height: 32px;">
+                                        <div class="d-flex align-items-center justify-content-center bg-primary rounded-circle text-white fw-bold" style="width: 32px; height: 32px; font-size: 14px;">
+                                            ${grade.student_name.charAt(0).toUpperCase()}
+                                        </div>
+                                    </div>
+                                    <span class="fw-medium">${grade.student_name}</span>
+                                </div>
+                            </td>
+                            <td><code class="bg-light px-2 py-1 rounded">${grade.matric_number}</code></td>
+                            <td><span class="badge bg-info text-white">${grade.level}</span></td>
+                            <td><span class="badge bg-secondary">${grade.semester}</span></td>
+                            <td><span class="fw-bold fs-6 ${getScoreColor(grade.score)}">${grade.score}%</span></td>
+                            <td><span class="badge fs-6 px-2 py-1 ${getGradeColor(grade.grade)}">${grade.grade}</span></td>
+                            <td><small class="text-muted">${grade.lecturer}</small></td>
+                        `;
+
+                        tbody.appendChild(row);
+                    });
+
+                    // Update navigation info
+                    currentCourseIndex = filteredCourses.findIndex(c => c.id == courseId);
+                    updateNavigationInfo();
+
+                    showCourseDisplay();
+                }
+
+                // Navigation functions
+                function updateNavigationButtons() {
+                    const prevBtn = document.getElementById('prevBtn');
+                    const nextBtn = document.getElementById('nextBtn');
+                    const navInfo = document.getElementById('courseNavInfo');
+
+                    if (filteredCourses.length > 1) {
+                        prevBtn.disabled = currentCourseIndex <= 0;
+                        nextBtn.disabled = currentCourseIndex >= filteredCourses.length - 1;
+                        navInfo.style.display = 'block';
+
+                        // Enable navigation buttons
+                        prevBtn.style.display = 'inline-block';
+                        nextBtn.style.display = 'inline-block';
+                    } else {
+                        prevBtn.disabled = true;
+                        nextBtn.disabled = true;
+                        navInfo.style.display = 'none';
+
+                        // Hide navigation buttons if only one or no courses
+                        if (filteredCourses.length <= 1) {
+                            prevBtn.style.display = 'none';
+                            nextBtn.style.display = 'none';
+                        }
+                    }
+                }
+
+                function updateNavigationInfo() {
+                    if (filteredCourses.length > 0) {
+                        document.getElementById('currentCourseIndex').textContent = currentCourseIndex + 1;
+                        document.getElementById('totalCourses').textContent = filteredCourses.length;
+
+                        const currentCourse = filteredCourses[currentCourseIndex];
+                        document.getElementById('currentCourseInfo').textContent =
+                            `${currentCourse.title} (${currentCourse.code})`;
+                    }
+                }
+
+                // Navigation button handlers
+                window.previousCourse = function() {
+                    if (currentCourseIndex > 0) {
+                        currentCourseIndex--;
+                        const course = filteredCourses[currentCourseIndex];
+                        courseFilter.value = course.id;
+                        displayCourse(course.id);
+                    }
+                };
+
+                window.nextCourse = function() {
+                    if (currentCourseIndex < filteredCourses.length - 1) {
+                        currentCourseIndex++;
+                        const course = filteredCourses[currentCourseIndex];
+                        courseFilter.value = course.id;
+                        displayCourse(course.id);
+                    }
+                };
+
+                // Display state functions
+                function showDefaultState() {
+                    document.getElementById('defaultState').style.display = 'block';
+                    document.getElementById('courseDisplay').style.display = 'none';
+                    document.getElementById('noGradesState').style.display = 'none';
+                }
+
+                function showCourseDisplay() {
+                    document.getElementById('defaultState').style.display = 'none';
+                    document.getElementById('courseDisplay').style.display = 'block';
+                    document.getElementById('noGradesState').style.display = 'none';
+                }
+
+                function showNoGradesState() {
+                    document.getElementById('defaultState').style.display = 'none';
+                    document.getElementById('courseDisplay').style.display = 'none';
+                    document.getElementById('noGradesState').style.display = 'block';
+                }
+
+                // Clear filters function
+                window.clearFilters = function() {
+                    levelFilter.value = '';
+                    semesterFilter.value = '';
+                    courseFilter.value = '';
+                    currentCourseIndex = 0;
+                    filteredCourses = [];
+                    updateCourseDropdown();
+                    showDefaultState();
+
+                    // Reset default state to original message
+                    const defaultState = document.getElementById('defaultState');
+                    defaultState.innerHTML = `
+                        <div class="mb-3">
+                            <i class="fas fa-search fa-4x text-muted"></i>
+                        </div>
+                        <h5 class="text-muted">Select a Course to View Grades</h5>
+                        <p class="text-muted">Use the filters above to select Level, Semester, and Course to view student grades.</p>
+                    `;
+                };
+
+                // Event listeners
+                levelFilter.addEventListener("change", function() {
+                    courseFilter.value = ''; // Reset course selection when level changes
+                    currentCourseIndex = 0;
+                    updateCourseDropdown();
+                    if (!courseFilter.value) {
+                        showDefaultState();
+                    }
+                });
+
+                semesterFilter.addEventListener("change", function() {
+                    courseFilter.value = ''; // Reset course selection when semester changes
+                    currentCourseIndex = 0;
+                    updateCourseDropdown();
+                    if (!courseFilter.value) {
+                        showDefaultState();
+                    }
+                });
+
+                courseFilter.addEventListener("change", function() {
+                    if (this.value) {
+                        displayCourse(this.value);
+                    } else {
+                        showDefaultState();
+                    }
+                });
+
+                // Initialize
+                updateCourseDropdown(); // Populate all courses initially
+                showDefaultState();
+            });
+            </script>
+
+
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Student Results - {{ department.name }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl px-3" style="max-width: 1400px; margin: 0 auto;">
+    <!-- Page Header - Responsive -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" >
+                <div class="card-body text-white p-4">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8 col-md-7 mb-3 mb-md-0">
+                            <h2 class="mb-2 fw-bold">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                <span class="d-none d-sm-inline">Student Results Management</span>
+                                <span class="d-sm-none">Results</span>
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                <i class="fas fa-building me-1"></i>
+                                {{ department.name }} Department
+                            </p>
+                        </div>
+                        <div class="col-lg-4 col-md-5 text-md-end">
+                            <button class="btn btn-light btn-lg shadow-sm w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#generateResultModal">
+                                <i class="fas fa-plus me-2"></i>
+                                <span class="d-none d-sm-inline">Generate New Result</span>
+                                <span class="d-sm-none">Generate</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Responsive Filters Card -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 text-dark">
+                    <i class="fas fa-filter text-primary me-2"></i>
+                    <span class="d-none d-sm-inline">Filter & Search Results</span>
+                    <span class="d-sm-none">Filters</span>
+                </h5>
+                <button class="btn btn-sm btn-outline-primary d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="collapse d-lg-block" id="filtersCollapse">
+                <div class="row g-3">
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <label for="levelFilter" class="form-label fw-semibold text-dark small">
+                            <i class="fas fa-layer-group text-info me-1"></i>
+                            Level
+                        </label>
+                        <select class="form-select border-2" id="levelFilter">
+                            <option value="">All Levels</option>
+                            {% for level in levels %}
+                                <option value="{{ level.id }}">{{ level.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <label for="semesterFilter" class="form-label fw-semibold text-dark small">
+                            <i class="fas fa-calendar-alt text-warning me-1"></i>
+                            Semester
+                        </label>
+                        <select class="form-select border-2" id="semesterFilter">
+                            <option value="">All Semesters</option>
+                            {% for semester in semesters %}
+                                <option value="{{ semester.id }}">{{ semester.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <label for="statusFilter" class="form-label fw-semibold text-dark small">
+                            <i class="fas fa-flag text-success me-1"></i>
+                            Status
+                        </label>
+                        <select class="form-select border-2" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 d-flex align-items-end">
+                        <button class="btn btn-primary w-100 shadow-sm" onclick="loadResults()">
+                            <i class="fas fa-search me-2"></i>
+                            <span class="d-none d-sm-inline">Search</span>
+                            <span class="d-sm-none">Go</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Responsive Results Display -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="mb-0 text-dark fw-bold">
+                    <i class="fas fa-table text-primary me-2"></i>
+                    <span class="d-none d-sm-inline">Student Results Overview</span>
+                    <span class="d-sm-none">Results</span>
+                </h5>
+                <span class="badge bg-primary fs-6 px-3 py-2 mt-2 mt-sm-0" id="resultsCount">0 results</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <!-- Loading State -->
+            <div class="text-center py-5" id="loadingState">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 class="text-muted">Loading Results...</h5>
+                <p class="text-muted d-none d-sm-block">Please wait while we fetch the data</p>
+            </div>
+
+            <!-- Empty State -->
+            <div class="text-center py-5" id="emptyState" style="display: none;">
+                <div class="mb-4">
+                    <i class="fas fa-graduation-cap fa-4x text-muted opacity-50"></i>
+                </div>
+                <h4 class="text-muted mb-3">No Results Found</h4>
+                <p class="text-muted mb-4 d-none d-sm-block">Use the filters above to search for student results or generate new results.</p>
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#generateResultModal">
+                    <i class="fas fa-plus me-2"></i>
+                    Generate First Result
+                </button>
+            </div>
+
+            <!-- Desktop Table View -->
+            <div class="d-none d-lg-block" id="desktopTableContainer" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="border-0">#</th>
+                                <th class="border-0">Matric Number</th>
+                                <th class="border-0">Student Name</th>
+                                <th class="border-0">Level</th>
+                                <th class="border-0">Semester</th>
+                                <th class="border-0">Courses</th>
+                                <th class="border-0">TCU</th>
+                                <th class="border-0">TGP</th>
+                                <th class="border-0">GPA</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0">Remark</th>
+                                <th class="border-0">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="desktopTableBody">
+                            <!-- Desktop results will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile Card View -->
+            <div class="d-lg-none" id="mobileCardsContainer" style="display: none;">
+                <div class="container-fluid">
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-sm-10 col-md-8">
+                            <div id="mobileCardsBody" class="p-3">
+                                <!-- Mobile cards will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Generate Result Modal -->
+<div class="modal fade" id="generateResultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-graduation-cap me-2"></i>
+                    Generate Student Result
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="generateResultForm">
+                <div class="modal-body p-4">
+                    {% csrf_token %}
+                    <div class="alert alert-info border-0 mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This will generate a comprehensive result from all approved grades for the selected student and semester.
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="studentSelect" class="form-label fw-semibold">
+                                <i class="fas fa-user text-primary me-2"></i>
+                                Select Student
+                            </label>
+                            <select class="form-select form-select-lg border-2" id="studentSelect" name="student_id" required>
+                                <option value="">👨‍🎓 Choose a student...</option>
+                                {% for student in students %}
+                                    <option value="{{ student.id }}">
+                                        {{ student.matric_number }} - {{ student.full_name }} ({{ student.level.name }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="semesterSelect" class="form-label fw-semibold">
+                                <i class="fas fa-calendar-alt text-warning me-2"></i>
+                                Semester
+                            </label>
+                            <select class="form-select form-select-lg border-2" id="semesterSelect" name="semester" required>
+                                <option value="">📅 Choose semester...</option>
+                                {% for semester in semesters %}
+                                    <option value="{{ semester.id }}">{{ semester.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="fw-bold text-dark mb-2">
+                            <i class="fas fa-calculator text-success me-2"></i>
+                            What will be calculated:
+                        </h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-1"><i class="fas fa-check text-success me-2"></i>Total Credit Units (TCU)</li>
+                            <li class="mb-1"><i class="fas fa-check text-success me-2"></i>Total Grade Points (TGP)</li>
+                            <li class="mb-1"><i class="fas fa-check text-success me-2"></i>Grade Point Average (GPA)</li>
+                            <li class="mb-0"><i class="fas fa-check text-success me-2"></i>Pass/Fail Status</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light btn-lg px-4" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg px-4">
+                        <i class="fas fa-magic me-2"></i>
+                        Generate Result
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load initial results
+    loadResults();
+    
+    // Handle generate result form
+    document.getElementById('generateResultForm').addEventListener('submit', function(e) {
+        const studentId = document.getElementById('studentSelect').value;
+        if (studentId) {
+            this.action = `/department/generate-result/${studentId}/`;
+        }
+    });
+});
+
+function loadResults() {
+    const level = document.getElementById('levelFilter').value;
+    const semester = document.getElementById('semesterFilter').value;
+    const status = document.getElementById('statusFilter').value;
+
+    // Show loading state
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('resultsTableContainer').style.display = 'none';
+
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (level) params.append('level', level);
+    if (semester) params.append('semester', semester);
+    if (status) params.append('status', status);
+
+    fetch(`/department/fetch-student-results/?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            displayResults(data.results);
+        })
+        .catch(error => {
+            console.error('Error loading results:', error);
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            showToast('Error loading results. Please try again.', 'error');
+        });
+}
+
+function displayResults(results) {
+    const loadingState = document.getElementById('loadingState');
+    const emptyState = document.getElementById('emptyState');
+    const desktopContainer = document.getElementById('desktopTableContainer');
+    const mobileContainer = document.getElementById('mobileCardsContainer');
+    const resultsCount = document.getElementById('resultsCount');
+
+    // Hide loading state
+    loadingState.style.display = 'none';
+
+    if (results.length === 0) {
+        emptyState.style.display = 'block';
+        desktopContainer.style.display = 'none';
+        mobileContainer.style.display = 'none';
+        resultsCount.textContent = '0 results';
+        return;
+    }
+
+    // Show containers and update count
+    emptyState.style.display = 'none';
+    desktopContainer.style.display = 'block';
+    mobileContainer.style.display = 'block';
+    resultsCount.textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
+
+    // Populate desktop table
+    populateDesktopTable(results);
+
+    // Populate mobile cards
+    populateMobileCards(results);
+}
+
+function populateDesktopTable(results) {
+    const tbody = document.getElementById('desktopTableBody');
+    tbody.innerHTML = '';
+
+    results.forEach((result, index) => {
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td class="fw-bold text-primary">${index + 1}</td>
+            <td>
+                <div class="fw-bold text-dark">${result.matric_number}</div>
+            </td>
+            <td>
+                <div class="fw-semibold text-dark">${result.student_name}</div>
+            </td>
+            <td>
+                <span class="badge bg-info">
+                    ${result.level}
+                </span>
+            </td>
+            <td>
+                <span class="badge bg-secondary">
+                    ${result.semester}
+                </span>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-primary">
+                    ${result.course_count || 0}
+                </span>
+            </td>
+            <td class="text-center fw-bold">${result.total_credit_units}</td>
+            <td class="text-center fw-bold text-primary">${result.total_grade_points.toFixed(2)}</td>
+            <td class="text-center fw-bold ${getGPAColor(result.gpa)}">${result.gpa.toFixed(2)}</td>
+            <td class="text-center">${getStatusBadge(result.status)}</td>
+            <td class="text-center">${getRemarkBadge(result.remark)}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <a href="/department/view-result/${result.id}/" class="btn btn-outline-primary btn-sm" title="View Result">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <form method="post" action="/department/publish-result/${result.id}/" class="d-inline">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${document.querySelector('[name=csrfmiddlewaretoken]').value}">
+                        <button type="submit" class="btn btn-outline-${result.status === 'published' ? 'warning' : 'success'} btn-sm"
+                                title="${result.status === 'published' ? 'Unpublish' : 'Publish'} Result"
+                                onclick="return confirm('${result.status === 'published' ? 'Unpublish' : 'Publish'} this result?')">
+                            <i class="fas fa-${result.status === 'published' ? 'eye-slash' : 'check'}"></i>
+                        </button>
+                    </form>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+function populateMobileCards(results) {
+    const container = document.getElementById('mobileCardsBody');
+    container.innerHTML = '';
+
+    results.forEach((result, index) => {
+        const card = document.createElement('div');
+        card.className = 'card mb-4 border-0 shadow-sm mobile-card mx-auto';
+
+        card.innerHTML = `
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 fw-bold text-dark">${result.student_name}</h6>
+                        <p class="card-text text-muted small mb-2">${result.matric_number}</p>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            <span class="badge bg-info small">${result.level}</span>
+                            <span class="badge bg-secondary small">${result.semester}</span>
+                            <span class="badge bg-primary small">${result.course_count || 0} courses</span>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="mb-2">
+                            <div class="fw-bold ${getGPAColor(result.gpa)} fs-4">${result.gpa.toFixed(2)}</div>
+                            <small class="text-muted">GPA</small>
+                        </div>
+                        ${getStatusBadge(result.status)}
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-4 text-center">
+                        <div class="fw-bold">${result.total_credit_units}</div>
+                        <small class="text-muted">TCU</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-primary">${result.total_grade_points.toFixed(2)}</div>
+                        <small class="text-muted">TGP</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        ${getRemarkBadge(result.remark)}
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="btn-group w-100">
+                            <a href="/department/view-result/${result.id}/" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                            <form method="post" action="/department/publish-result/${result.id}/" class="flex-fill">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${document.querySelector('[name=csrfmiddlewaretoken]').value}">
+                                <button type="submit" class="btn btn-outline-${result.status === 'published' ? 'warning' : 'success'} btn-sm w-100"
+                                        onclick="return confirm('${result.status === 'published' ? 'Unpublish' : 'Publish'} this result?')">
+                                    <i class="fas fa-${result.status === 'published' ? 'eye-slash' : 'check'} me-1"></i>
+                                    ${result.status === 'published' ? 'Unpublish' : 'Publish'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+// Helper functions
+function getStatusBadge(status) {
+    const badges = {
+        'published': '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Published</span>',
+        'draft': '<span class="badge bg-warning text-dark"><i class="fas fa-edit me-1"></i>Draft</span>',
+    };
+    return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+}
+
+function getRemarkBadge(remark) {
+    return remark === 'passed'
+        ? '<span class="badge bg-success"><i class="fas fa-trophy me-1"></i>Passed</span>'
+        : '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Failed</span>';
+}
+
+function getGPAColor(gpa) {
+    if (gpa >= 3.5) return 'text-success';
+    if (gpa >= 2.5) return 'text-warning';
+    return 'text-danger';
+}
+</script>
+{% endblock %}
+
+<style>
+/* Custom responsive styles */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .badge {
+        font-size: 0.7rem;
+    }
+
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-xxl {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Improve card hover effects */
+.card:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* Better mobile card styling */
+.mobile-card {
+    border-left: 4px solid #007bff;
+    max-width: 100%;
+    margin: 0 auto 1.5rem auto;
+}
+
+.mobile-card:hover {
+    border-left-color: #0056b3;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+/* Mobile cards container */
+#mobileCardsBody {
+    padding: 1rem;
+}
+
+@media (min-width: 576px) {
+    .mobile-card {
+        max-width: 90%;
+    }
+
+    #mobileCardsBody {
+        padding: 1.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .mobile-card {
+        max-width: 85%;
+    }
+
+    #mobileCardsBody {
+        padding: 2rem;
+    }
+}
+</style>
+
+
+
+

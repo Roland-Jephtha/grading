@@ -1,0 +1,212 @@
+/* ========================================
+   PTI ADMIN LOGO STYLING - UNFOLD ADMIN
+   ======================================== */
+
+/* Base Admin Logo Styling */
+.unfold-logo img,
+.admin-logo img,
+.django-admin img,
+[class*="admin"] img[class*="logo"],
+[class*="logo"] img,
+img[src*="pti.png"],
+img[alt*="PTI"] {
+    max-width: 55px !important;
+    min-width: 55px !important;
+    height: auto !important;
+    object-fit: contain;
+    transition: transform 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-left: 3em;
+
+}
+
+/* Admin Header Logo Specific */
+.admin-header img,
+.unfold-header img,
+.site-logo img,
+.branding img {
+    max-width: 50px !important;
+    height: auto !important;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+/* Hover Effects - Zoom/Scale Animation for Admin */
+.unfold-logo:hover img,
+.admin-logo:hover img,
+.django-admin:hover img,
+[class*="admin"]:hover img[class*="logo"],
+a:hover img[src*="pti.png"],
+a:hover img[alt*="PTI"],
+.admin-header:hover img,
+.unfold-header:hover img,
+.site-logo:hover img,
+.branding:hover img {
+    transform: scale(1.15) rotate(5deg) !important;
+    filter: brightness(1.2) contrast(1.1) drop-shadow(0 4px 8px rgba(0,0,0,0.15)) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+/* Special Glow Animation for Admin */
+@keyframes adminLogoGlow {
+    0% { 
+        filter: brightness(1) contrast(1);
+        box-shadow: 0 0 0 rgba(0,123,255,0);
+    }
+    50% { 
+        filter: brightness(1.3) contrast(1.2);
+        box-shadow: 0 0 20px rgba(0,123,255,0.3);
+    }
+    100% { 
+        filter: brightness(1) contrast(1);
+        box-shadow: 0 0 0 rgba(0,123,255,0);
+    }
+}
+
+/* Apply glow animation on hover */
+.unfold-logo:hover img,
+.admin-logo:hover img {
+    animation: adminLogoGlow 0.8s ease-in-out !important;
+}
+
+/* Admin Sidebar Logo */
+.admin-sidebar img,
+.unfold-sidebar img,
+nav img[src*="pti.png"] {
+    max-width: 40px !important;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.admin-sidebar:hover img,
+.unfold-sidebar:hover img,
+nav:hover img[src*="pti.png"] {
+    transform: scale(1.12) rotate(3deg) !important;
+    filter: brightness(1.15) contrast(1.1) !important;
+}
+
+/* Responsive adjustments for Admin */
+@media only screen and (max-width: 768px) {
+    .unfold-logo img,
+    .admin-logo img,
+    img[src*="pti.png"] {
+        max-width: 35px !important;
+        min-width: 35px !important;
+    }
+    
+    .unfold-logo:hover img,
+    .admin-logo:hover img,
+    a:hover img[src*="pti.png"] {
+        transform: scale(1.1) rotate(3deg) !important;
+    }
+}
+
+/* Dark theme adjustments for Admin */
+.admin-dark img[src*="pti.png"],
+[data-theme="dark"] img[src*="pti.png"],
+.dark-mode img[src*="pti.png"] {
+    filter: brightness(1.2) contrast(1.1) !important;
+}
+
+.admin-dark .unfold-logo:hover img,
+[data-theme="dark"] .admin-logo:hover img,
+.dark-mode a:hover img[src*="pti.png"] {
+    filter: brightness(1.4) contrast(1.2) drop-shadow(0 2px 8px rgba(255,255,255,0.2)) !important;
+}
+
+/* Active/Focus states for Admin */
+.unfold-logo:active img,
+.admin-logo:active img,
+a:active img[src*="pti.png"] {
+    transform: scale(1.05) !important;
+}
+
+.unfold-logo:focus img,
+.admin-logo:focus img,
+a:focus img[src*="pti.png"] {
+    outline: 2px solid #007bff !important;
+    outline-offset: 2px !important;
+    border-radius: 8px !important;
+}
+
+/* Admin Navigation Logo */
+.admin-nav img,
+.unfold-nav img,
+.admin-breadcrumb img {
+    max-width: 30px !important;
+    height: auto !important;
+    transition: transform 0.2s ease;
+}
+
+.admin-nav:hover img,
+.unfold-nav:hover img,
+.admin-breadcrumb:hover img {
+    transform: scale(1.08) !important;
+}
+
+/* Ensure logo visibility in admin */
+.unfold-logo img,
+.admin-logo img,
+img[src*="pti.png"],
+img[alt*="PTI"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
+}
+
+/* Admin Header Branding */
+.admin-header .branding,
+.unfold-header .branding {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.admin-header .branding img,
+.unfold-header .branding img {
+    margin-right: 10px !important;
+}
+
+/* Special effects for PTI logo in admin */
+img[src*="pti.png"]:hover {
+    transform: scale(1.15) rotate(5deg) !important;
+    filter: brightness(1.2) contrast(1.1) saturate(1.1) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Admin login page logo */
+.admin-login img,
+.login-form img,
+.auth-form img {
+    max-width: 80px !important;
+    height: auto !important;
+    margin-bottom: 20px !important;
+}
+
+.admin-login:hover img,
+.login-form:hover img,
+.auth-form:hover img {
+    transform: scale(1.1) !important;
+    filter: brightness(1.1) !important;
+}
+
+/* Unfold specific selectors */
+.unfold .logo img,
+.unfold-admin .logo img,
+[class*="unfold"] img[class*="logo"] {
+    transition: transform 0.3s ease, filter 0.3s ease !important;
+}
+
+.unfold .logo:hover img,
+.unfold-admin .logo:hover img,
+[class*="unfold"]:hover img[class*="logo"] {
+    transform: scale(1.12) rotate(3deg) !important;
+    filter: brightness(1.15) contrast(1.1) !important;
+}
+
+/* Performance optimization */
+.unfold-logo img,
+.admin-logo img,
+img[src*="pti.png"] {
+    will-change: transform, filter;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+}

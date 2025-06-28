@@ -1,0 +1,472 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+
+
+{% block content %}
+
+
+
+
+
+
+        <div class="content-body  ">
+				<div class="container-fluid">
+
+
+
+
+
+		<div class="form-head d-flex flex-wrap mb-sm-4 mb-3 align-items-center">
+			<div class="me-auto  d-lg-block mb-3">
+				<h2 class="text-black mb-0 font-w700">Grade Students</h2>
+			</div>
+
+
+                            <button class="btn btn-primary btn-rounded mb-3" onclick="submitGradesToDepartment()">
+                                    <i class="fa fa-upload me-2"></i>Submit Grades to Department
+                            </button>
+
+
+			<!-- <a href="javascript:void(0);"  data-bs-toggle="modal" data-bs-target="#addOrderModal" class="btn btn-primary btn-rounded mb-3"><i class="flaticon-013-checkmark me-3"></i>Grade a Student</a> -->
+			<!-- Add Order -->
+			<div class="modal fade" id="addOrderModal">
+				<div class="modal-dialog modal-dialog-centered" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Grading</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal">
+							</button>
+						</div>
+						<div class="modal-body">
+                            <form method="post" id="gradeForm">
+					   {% csrf_token %}
+    
+                        <!-- Department, Level, Semester select fields -->
+                        {{ form.department.label_tag }} {{ form.department }}
+                        {{ form.level.label_tag }} {{ form.level }}
+                        {{ form.semester.label_tag }} {{ form.semester }}
+
+                        <!-- Student dropdown (will be dynamically updated) -->
+                        {{ form.student.label_tag }} {{ form.student }}
+
+                        <!-- Other fields -->
+                        {{ form.course.label_tag }} {{ form.course }}
+                        {{ form.score.label_tag }} {{ form.score }}
+
+
+                        	<div class="modal-footer">
+						<button type="button" class="btn btn-danger btn-sm light" data-bs-dismiss="modal" style="border-radius: 5px;">Close</button>
+                              
+                        <button type="submit" class="btn btn-success btn-sm" style="border-radius: 5px;">Add Grade</button>
+								
+						</div>
+					
+
+
+					</div>
+					</div>
+                                    </form>
+
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<div class="row">
+
+        
+
+
+        <div class="col-lg-12">
+            <div class="card">
+
+
+                <div class="card-header pb-0 border-0">
+                    <h4 class="card-title mb-0">My Students</h4>
+                </div>
+
+
+
+
+                <div class="px-3 pb-2">
+                    <div class="row g-3 align-items-end">
+
+                        <!-- Department -->
+                        <div class="col-md-2">
+                            <div class="position-relative">
+                                <select id="departmentFilter" class="form-select form-select-sm">
+                                    <option value="">All Departments ▼</option>
+                                    {% for dept in departments %}
+                                        <option value="{{ dept.name }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Level -->
+                        <div class="col-md-2">
+                            <div class="position-relative">
+                                <select id="levelFilter" class="form-select form-select-sm">
+                                    <option value="">All Levels ▼</option>
+                                    {% for lvl in levels %}
+                                        <option value="{{ lvl.name }}">{{ lvl.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Semester -->
+                        <div class="col-md-2">
+                            <div class="position-relative">
+                                <select id="semesterFilter" class="form-select form-select-sm">
+                                    <option value="">All Semesters ▼</option>
+                                    {% for sem in semesters %}
+                                        <option value="{{ sem.name }}">{{ sem.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="col-md-4">
+                            <!-- <label for="student-search-input" class="form-label">Search (comma-separated)</label> -->
+                            <input type="search" class="form-control form-control-sm" id="student-search-input" placeholder="name, mat no, grade...">
+                        </div>
+                        <div class="col-md-2">
+                            <a href="javascript:void(0);"   data-bs-toggle="modal" data-bs-target="#addOrderModal" class="btn btn-success btn-sm" ><i class="flaticon-013-checkmark me-3"></i>Grade a Student</a>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-responsive-md">
+                            <thead>
+                                <tr>
+                             
+                                    <th><strong>S/N</strong></th>
+                                    <th><strong>NAME</strong></th>
+                                    <th><strong>Mat No</strong></th>
+                                    <th><strong>Dept</strong></th>
+                                    <th><strong>Course</strong></th>
+                                    <th><strong>Score</strong></th>
+                                    <th><strong>Grade</strong></th>
+                                    <th><strong>level</strong></th>
+                                    <th><strong>semester</strong></th>
+                                    <th><strong>status</strong></th>
+                                    <th><strong>Date</strong></th>
+                                    <th><strong>Action</strong></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                {% for grade in grades  %}
+                                <tr>
+                                    <td><strong>{{forloop.counter}}</strong></td>
+                                    <td>{{ grade.student.full_name }}</td>
+                                    <td>{{ grade.student.matric_number }}</td>
+                                    <td>{{ grade.department.name }}</td>
+                                    <td>{{ grade.course.code }}</td>
+                                    <td>{{ grade.score }}</td>
+                                    <td>{{ grade.grade }}</td>
+                                    <td>{{ grade.student.level}}</td>
+                                    <td>{{ grade.semester }}</td>
+                                            <td>
+                                                {% if grade.status == 'draft' %}
+                                                    <span style="background-color:#fef3c7; color:#92400e; padding:4px 8px; border-radius:6px;">Draft</span>
+                                                {% elif grade.status == 'submitted' %}
+                                                    <span style="background-color:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:6px;">Submitted</span>
+                                                {% elif grade.status == 'approved' %}
+                                                    <span style="background-color:#d1fae5; color:#065f46; padding:4px 8px; border-radius:6px;">Approved</span>
+                                                {% else %}
+                                                    <span style="background-color:#f3f4f6; color:#4b5563; padding:4px 8px; border-radius:6px;">{{ grade.status }}</span>
+                                                {% endif %}
+                                            </td>                                    
+                                        <td>{{ grade.created|date:"d F Y" }}</td>
+                                    <td>
+                                        <div class="d-flex">
+                                            <a href="#" class="btn btn-primary shadow btn-xs sharp me-3"><i class="fa fa-pencil"></i></a>
+                                            <a href="#" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-trash"></i></a>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {% endfor %}
+
+
+                         
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+		</div>	
+	
+	</div>
+	
+        </div>
+
+
+
+
+
+
+
+        <script>
+function submitGradesToDepartment() {
+    const department = document.getElementById("departmentFilter").value;
+    const level = document.getElementById("levelFilter").value;
+    const semester = document.getElementById("semesterFilter").value;
+
+    if (!department || !level || !semester) {
+        alert("Please select Department, Level, and Semester before submitting.");
+        return;
+    }
+
+    fetch(`/submit-grades/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": '{{ csrf_token }}',
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            department: department,
+            level: level,
+            semester: semester
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        location.reload();
+    })
+    .catch(error => {
+        console.error("Error submitting grades:", error);
+        alert("An error occurred while submitting grades.");
+    });
+}
+</script>
+
+
+
+
+
+
+        <script>
+    // Event bindings
+    document.getElementById('student-search-input').addEventListener('input', filterTable);
+    document.getElementById('levelFilter').addEventListener('change', filterTable);
+    document.getElementById('semesterFilter').addEventListener('change', filterTable);
+    document.getElementById('departmentFilter').addEventListener('change', filterTable);
+
+    function filterTable() {
+        const searchInput = document.getElementById("student-search-input").value.toLowerCase();
+        const searchTerms = searchInput.split(',').map(term => term.trim()).filter(Boolean);
+
+        const level = document.getElementById("levelFilter").value.toLowerCase();
+        const semester = document.getElementById("semesterFilter").value.toLowerCase();
+        const department = document.getElementById("departmentFilter").value.toLowerCase();
+
+        const rows = document.querySelectorAll(".table-responsive-md tbody tr");
+
+        rows.forEach(row => {
+            const name = row.cells[1].textContent.toLowerCase();
+            const matNo = row.cells[2].textContent.toLowerCase();
+            const dept = row.cells[3].textContent.toLowerCase();
+            const grade = row.cells[6].textContent.toLowerCase();
+            const levelCell = row.cells[7].textContent.toLowerCase();
+            const semesterCell = row.cells[8].textContent.toLowerCase();
+
+            // Match dropdowns
+            const matchesDept = !department || dept === department;
+            const matchesLevel = !level || levelCell === level;
+            const matchesSemester = !semester || semesterCell === semester;
+
+            // Match search terms
+            const combinedSearchable = `${name} ${matNo} ${grade}`;
+            const matchesSearch = searchTerms.every(term => combinedSearchable.includes(term));
+
+            // Final decision
+            row.style.display = (matchesDept && matchesLevel && matchesSemester && matchesSearch) ? "" : "none";
+        });
+    }
+</script>
+
+
+
+
+    <script>
+
+        // document.getElementById('student-search-input').addEventListener('input', filterTable);
+
+        // function filterTable() {
+        //     const input = document.getElementById("student-search-input");
+        //     const filterText = input.value.toLowerCase();
+        //     const filters = filterText.split(',').map(f => f.trim()).filter(Boolean); // clean and split
+
+        //     const table = document.querySelector(".table-responsive-md tbody");
+        //     const rows = table.getElementsByTagName("tr");
+
+        //     for (let i = 0; i < rows.length; i++) {
+        //         const nameCell = rows[i].cells[1];        // Name
+        //         const matNoCell = rows[i].cells[2];       // Matric No
+        //         const departmentCell = rows[i].cells[3];  // Department
+        //         const courseCell = rows[i].cells[4];      // Course
+        //         const gradeCell = rows[i].cells[6];       // Grade
+        //         const levelCell = rows[i].cells[7];       // Level
+        //         const semesterCell = rows[i].cells[8];    // Semester
+
+        //         const text = (
+        //             nameCell.textContent +
+        //             ' ' +
+        //             matNoCell.textContent +
+        //             ' ' +
+        //             departmentCell.textContent +
+        //             ' ' +
+        //             courseCell.textContent +
+        //             ' ' +
+        //             gradeCell.textContent +
+        //             ' ' +
+        //             levelCell.textContent +
+        //             ' ' +
+        //             semesterCell.textContent
+        //         ).toLowerCase();
+
+        //         const matchesAll = filters.every(f => text.includes(f));
+        //         rows[i].style.display = matchesAll ? "" : "none";
+        //     }
+        // }
+
+
+
+
+
+
+
+
+        
+
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const departmentSelect = document.getElementById('id_department');
+            const levelSelect = document.getElementById('id_level');
+            const studentSelect = document.getElementById('id_student');
+
+            function fetchStudents() {
+                const department = departmentSelect.value;
+                const level = levelSelect.value;
+
+                // Build query string
+                const params = new URLSearchParams();
+                if (department) params.append('department', department);
+                if (level) params.append('level', level);
+
+                fetch(`/fetch-students/?${params.toString()}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Clear existing options
+                        studentSelect.innerHTML = '';
+
+                        // Add default empty option
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = '';
+                        defaultOption.text = '---------';
+                        studentSelect.appendChild(defaultOption);
+
+                        // Populate with new options
+                        data.students.forEach(student => {
+                            const option = document.createElement('option');
+                            option.value = student.id;
+                            option.text = student.name;
+                            studentSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching students:', error);
+                    });
+            }
+
+            // Fetch students whenever department or level changes
+            departmentSelect.addEventListener('change', fetchStudents);
+            levelSelect.addEventListener('change', fetchStudents);
+
+            // Optional: fetch students on page load if values are pre-selected
+            fetchStudents();
+        });
+
+
+
+
+
+
+
+function fetchCourses() {
+    const dept = document.getElementById('id_department').value;
+    const level = document.getElementById('id_level').value;
+    const semester = document.getElementById('id_semester').value;
+
+    if (dept && level && semester) {
+        fetch(`/fetch-courses/?department=${dept}&level=${level}&semester=${semester}`)
+        .then(res => res.json())
+        .then(data => {
+            const courseSelect = document.getElementById('id_course');
+            courseSelect.innerHTML = '<option value="">---------</option>';
+            data.courses.forEach(course => {
+                const option = document.createElement('option');
+                option.value = course.id;
+                option.textContent = course.title;
+                courseSelect.appendChild(option);
+            });
+        });
+    }
+}
+
+document.getElementById('id_department').addEventListener('change', fetchCourses);
+document.getElementById('id_level').addEventListener('change', fetchCourses);
+document.getElementById('id_semester').addEventListener('change', fetchCourses);
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+{% endblock %}
+
+
+

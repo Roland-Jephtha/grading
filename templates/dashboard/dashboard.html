@@ -1,0 +1,363 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content-body">
+    <div class="container-fluid">
+        
+        <!-- Dashboard Header -->
+        <div class="form-head d-flex flex-wrap mb-sm-4 mb-3 align-items-center">
+            <div class="me-auto d-lg-block mb-3">
+                {% if user.position == 'student' %}
+                    <h2 class="text-black mb-0 font-w700">Student Dashboard</h2>
+                    <p class="text-muted">Welcome back, {{ user.first_name|default:user.username }}!</p>
+                {% elif user.position == 'lecturer' %}
+                    <h2 class="text-black mb-0 font-w700">Lecturer Dashboard</h2>
+                    <p class="text-muted">{{ lecturer_stats.department }} Department</p>
+                {% elif user.position == 'hod' %}
+                    <h2 class="text-black mb-0 font-w700">Head of Department Dashboard</h2>
+                    <p class="text-muted">{{ hod_stats.department }} Department - Overview and Management</p>
+                {% else %}
+                    <h2 class="text-black mb-0 font-w700">Dashboard</h2>
+                    <p class="text-muted">Welcome to the grading system</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Role-based Dashboard Content -->
+        {% if user.position == 'student' %}
+            <!-- student DASHBOARD -->
+            <div class="row">
+                <!-- student Performance Cards -->
+                <div class="col-xl-4 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-primary">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ student_stats.total_courses|default:0 }}</h2>
+                                    <p class="mb-0 text-white font-w600">Total Courses</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-book text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-4 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-success">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ student_stats.current_gpa|default:"0.00"|floatformat:2 }}</h2>
+                                    <p class="mb-0 text-white font-w600">Current GPA</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-chart-line text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-4 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-warning">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ student_stats.completed_semesters|default:0 }}</h2>
+                                    <p class="mb-0 text-white font-w600">Semesters</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-calendar text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+           
+            </div>
+
+            <!-- student Quick Actions -->
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Quick Actions</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <a href="{% url 'student_performance' %}" class="btn btn-primary btn-block mb-3">
+                                        <i class="fas fa-chart-bar me-2"></i>View Performance
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'student_my_results' %}" class="btn btn-success btn-block mb-3">
+                                        <i class="fas fa-file-alt me-2"></i>View Results
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'update_profile' %}" class="btn btn-info btn-block mb-3">
+                                        <i class="fas fa-user-edit me-2"></i>Update Profile
+                                    </a>
+                                </div>
+                         
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% elif user.position == 'lecturer' %}
+            <!-- lecturer DASHBOARD -->
+            <div class="row">
+                <!-- lecturer Management Cards -->
+                {% comment %} <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-primary">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ lecturer_stats.total_courses|default:0 }}</h2>
+                                    <p class="mb-0 text-white font-w600">My Courses</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-chalkboard-teacher text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> {% endcomment %}
+                
+                <div class="col-xl-4 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-success">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{profile.department.name}}</h2>
+                                    <p class="mb-0 text-white font-w600">Department</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-users text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-4 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-warning">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ lecturer_stats.pending_grades|default:0 }}</h2>
+                                    <p class="mb-0 text-white font-w600">Pending Grades</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-clock text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-4 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-info">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ lecturer_stats.submitted_grades|default:0 }}</h2>
+                                    <p class="mb-0 text-white font-w600">Submitted Grades</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-check-circle text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- lecturer Quick Actions -->
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Quick Actions</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <a href="{% url 'grading' %}" class="btn btn-primary btn-block mb-3">
+                                        <i class="fas fa-plus me-2"></i>Add Grades
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'lecturer_results_view' %}" class="btn btn-success btn-block mb-3">
+                                        <i class="fas fa-eye me-2"></i>View Results
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'grading' %}" class="btn btn-info btn-block mb-3">
+                                        <i class="fas fa-book me-2"></i>My Courses
+                                    </a>
+                                </div>
+                            
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% elif user.position == 'hod' %}
+            <!-- hod DASHBOARD -->
+            <div class="row">
+                <!-- hod Management Cards -->
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-primary">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ hod_stats.total_students|default:students }}</h2>
+                                    <p class="mb-0 text-white font-w600">Students in Department</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-users text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-success">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ hod_stats.total_lecturers|default:lecturers }}</h2>
+                                    <p class="mb-0 text-white font-w600">Lecturers in Department</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-chalkboard-teacher text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-warning">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ hod_stats.pending_approvals|default:0 }}</h2>
+                                    <p class="mb-0 text-white font-w600">Pending Approvals</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-clock text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card card-bx bg-info">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">
+                                    <h2 class="text-white font-w700">{{ hod_stats.total_courses|default:0 }}</h2>
+                                    <p class="mb-0 text-white font-w600">Departmental Courses</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-book text-white" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- hod Quick Actions -->
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Quick Actions</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a href="{% url 'submitted_grades' %}" class="btn btn-primary btn-block mb-3">
+                                        <i class="fas fa-check me-2"></i>Approve Grades
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="{% url 'view_all_results' %}" class="btn btn-success btn-block mb-3">
+                                        <i class="fas fa-chart-bar me-2"></i>View Results
+                                    </a>
+                                </div>
+                           
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- DEFAULT DASHBOARD -->
+            <div class="row">
+                <div class="col-xl-3 col-xxl-6 col-sm-6">
+                    <div class="card card-bx">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">	
+                                    <h2 class="text-black font-w700">{{students|default:0}}</h2>
+                                    <p class="mb-0 text-black font-w600">Total students</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-users text-primary" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-xxl-6 col-sm-6">
+                    <div class="card card-bx">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                <div class="media-body me-3">	
+                                    <h2 class="text-black font-w700">{{lecturers|default:0}}</h2>
+                                    <p class="mb-0 text-black font-w600">Total lecturers</p>
+                                </div>
+                                <div class="d-inline-block">
+                                    <i class="fas fa-chalkboard-teacher text-primary" style="font-size: 40px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- COMMON CALENDAR SECTION (Constant across all roles) -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header border-0 pb-0 header-cal">
+                        <div class="me-auto pe-3">
+                            <h4 class="text-black font-w700">Calendar</h4>
+                        </div>								
+                    </div>		
+                    <div class="card-body text-center event-calender pb-2">
+                        <input type='text' class="form-control d-none" id='datetimepicker1'>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,282 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}My Results - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+
+<div class="content-body">
+    <div class="container-fluid">
+
+        <div class="form-head d-flex flex-wrap mb-sm-4 mb-3 align-items-center">
+            <div class="me-auto d-lg-block mb-3">
+                <h2 class="text-black mb-0 font-w700">My Academic Results</h2>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-user-graduate me-2"></i>
+                    {{ student.full_name }} - {{ student.matric_number }} - {{ student.department.name }}
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header pb-0 border-0">
+                        <h4 class="card-title mb-0">View My Results</h4>
+                    </div>
+                    <br>
+
+                    <!-- Filters -->
+                    <div class="px-3 pb-3">
+                        <form method="GET" class="bg-light rounded p-3 mb-3">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-2">
+                                    <h6 class="mb-0 text-muted">
+                                        <i class="fas fa-filter me-2"></i>Select Filters:
+                                    </h6>
+                                </div>
+
+                                <!-- Level Filter -->
+                                <div class="col-md-3">
+                                    <label class="form-label mb-1 text-muted small">
+                                        <i class="fas fa-layer-group me-1"></i>Level <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="level" class="form-select form-select-sm" required>
+                                        <option value="">Select Level...</option>
+                                        {% for level in levels %}
+                                        <option value="{{ level.id }}" {% if level.id|stringformat:"s" == level_id %}selected{% endif %}>
+                                            {{ level.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Semester Filter -->
+                                <div class="col-md-3">
+                                    <label class="form-label mb-1 text-muted small">
+                                        <i class="fas fa-calendar me-1"></i>Semester <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="semester" class="form-select form-select-sm" required>
+                                        <option value="">Select Semester...</option>
+                                        {% for semester in semesters %}
+                                        <option value="{{ semester.id }}" {% if semester.id|stringformat:"s" == semester_id %}selected{% endif %}>
+                                            {{ semester.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Search Button -->
+                                <div class="col-md-4" style="margin-top: 1em;">
+                                    <button type="submit" class="btn btn-primary btn-sm me-2">
+                                        <i class="fas fa-search me-1"></i>View My Result
+                                    </button>
+                                    <a href="{% url 'student_my_results' %}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-times me-1"></i>Clear
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Results Display -->
+                    {% if show_results %}
+                        {% if student_result %}
+                        <div class="card-body">
+                            <!-- Result Header -->
+                            <div class="row mb-4">
+                                <div class="col-md-8">
+                                    <h4 class="text-primary mb-2">
+                                        <i class="fas fa-graduation-cap me-2"></i>
+                                        {{ selected_level.name }} - {{ selected_semester.name }} Semester Results
+                                    </h4>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Name:</strong> {{ student.full_name }}</p>
+                                            <p class="mb-1"><strong>Matric Number:</strong> {{ student.matric_number }}</p>
+                                            <p class="mb-1"><strong>Department:</strong> {{ student.department.name }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Level:</strong> {{ selected_level.name }}</p>
+                                            <p class="mb-1"><strong>Semester:</strong> {{ selected_semester.name }}</p>
+                                            <!-- <p class="mb-1"><strong>Status:</strong> 
+                                                {% if student_result.status == 'published' %}
+                                                    <span class="text-success fw-bold">Published</span>
+                                                {% else %}
+                                                    <span class="text-warning fw-bold">Draft</span>
+                                                {% endif %}
+                                            </p> -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body text-center">
+                                            <h3 class="mb-1" style="color: white;">{{ student_result.gpa|floatformat:2 }}</h3>
+                                            <p class="mb-0">GPA</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Course Results Table -->
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>S/N</th>
+                                            <th>Course Code</th>
+                                            <th>Course Title</th>
+                                            <th>Credit Unit</th>
+                                            <th>Score (%)</th>
+                                            <th>Grade</th>
+                                            <th>Grade Point</th>
+                                            <th>TCP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for grade in student_result.grades_list %}
+                                        <tr>
+                                            <td class="text-center">{{ forloop.counter }}</td>
+                                            <td class="fw-bold">{{ grade.course.code }}</td>
+                                            <td>{{ grade.course.title }}</td>
+                                            <td class="text-center">{{ grade.course.credit_unit }}</td>
+                                            <td class="text-center">{{ grade.score }}%</td>
+                                            <td class="text-center fw-bold">{{ grade.grade }}</td>
+                                            <td class="text-center">{{ grade.grade_point|floatformat:2 }}</td>
+                                            <td class="text-center text-primary fw-bold">{{ grade.grade_point|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3">TOTALS</th>
+                                            <th class="text-center">{{ student_result.tcu }}</th>
+                                            <th colspan="3"></th>
+                                            <th class="text-center text-primary fw-bold">{{ student_result.tgp|floatformat:2 }}</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Summary Cards -->
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <h4 class="mb-1">{{ student_result.total_courses }}</h4>
+                                            <p class="mb-0">Courses</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-secondary text-white">
+                                        <div class="card-body text-center">
+                                            <h4 class="mb-1">{{ student_result.tcu }}</h4>
+                                            <p class="mb-0">Total Credit Units</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body text-center">
+                                            <h4 class="mb-1">{{ student_result.tgp|floatformat:2 }}</h4>
+                                            <p class="mb-0">Total Grade Points</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card {% if student_result.remark == 'passed' %}bg-success{% else %}bg-danger{% endif %} text-white">
+                                        <div class="card-body text-center">
+                                            <h4 class="mb-1">{{ student_result.gpa|floatformat:2 }}</h4>
+                                            <p class="mb-0">
+                                                {% if student_result.remark == 'passed' %}
+                                                    PASSED
+                                                {% else %}
+                                                    FAILED
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Print Button -->
+                            <div class="text-center mt-4">
+                                <button class="btn btn-outline-primary" onclick="window.print()">
+                                    <i class="fas fa-print me-2"></i>
+                                    Print Result
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- No Result Found -->
+                        <div class="card-body text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-search fa-4x text-muted"></i>
+                            </div>
+                            <h5 class="text-muted">No Result Found</h5>
+                            <p class="text-muted">
+                                No result found for <strong>{{ selected_level.name }}</strong> - <strong>{{ selected_semester.name }}</strong>.
+                                <br>Your result may not have been generated yet or you may not have courses in this level/semester.
+                            </p>
+                            <div class="alert alert-info border-0 d-inline-block">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Note:</strong> Results are generated automatically when your grades are approved.
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <!-- Default State - No Filters Selected -->
+                        <div class="card-body text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-filter fa-4x text-muted"></i>
+                            </div>
+                            <h4 class="text-muted mb-3">Select Level and Semester</h4>
+                            <p class="text-muted mb-4">
+                                Please select both <strong>Level</strong> and <strong>Semester</strong> from the filters above to view your result.
+                                <br>Your academic performance will be displayed in a detailed format.
+                            </p>
+                            <div class="alert alert-info border-0 d-inline-block">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Note:</strong> You can only view results that have been published by your department.
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .card-header, nav, .navbar, .form-head, form {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table-bordered {
+        border: 2px solid #000 !important;
+    }
+    
+    .table-bordered th,
+    .table-bordered td {
+        border: 1px solid #000 !important;
+    }
+    
+    body {
+        font-size: 12px;
+    }
+    
+    .container-fluid {
+        padding: 0;
+    }
+}
+</style>
+
+{% endblock %}

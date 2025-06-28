@@ -1,0 +1,238 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content-body">
+    <div class="container-fluid">
+        
+        <!-- Page Header -->
+        <div class="form-head d-flex flex-wrap mb-sm-4 mb-3 align-items-center">
+            <div class="me-auto d-lg-block mb-3">
+                <h2 class="text-black mb-0 font-w700">Update Profile</h2>
+                <p class="text-muted">{{ user.position }} Profile Management</p>
+            </div>
+            <div class="d-flex align-items-center">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Profile Update Form -->
+        <div class="row">
+            <div class="col-xl-4 col-lg-5">
+                <!-- Profile Image Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Profile Picture</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="profile-photo mb-4">
+                            {% if profile.image %}
+                                <img src="{{ profile.image.url }}" class="img-fluid rounded-circle" width="150" height="150" alt="Profile Picture">
+                            {% else %}
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
+                                    <i class="fas fa-user text-white" style="font-size: 60px;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h4 class="text-black font-w700">{{ user.first_name|default:user.username }}</h4>
+                        <p class="text-muted">{{ user.position }}</p>
+                        {% if user.position == 'student' %}
+                            <span class="badge badge-primary">{{ profile.matric_number|default:"Not Set" }}</span>
+                        {% elif user.position == 'lecturer' or user.position == 'hod' %}
+                            <span class="badge badge-success">{{ profile.department.name|default:"Department Not Set" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Stats Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Account Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="profile-statistics">
+                            <div class="text-center border-bottom-1 pb-3 mb-3">
+                                <div class="row">
+                                    <div class="col">
+                                        <h3 class="m-b-0">{{ user.date_joined|date:"M Y" }}</h3>
+                                        <span>Joined</span>
+                                    </div>
+                                    <div class="col">
+                                        <h3 class="m-b-0">{{ user.last_login|date:"M d" }}</h3>
+                                        <span>Last Login</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="row">
+                                    <div class="col">
+                                        <h3 class="m-b-0 text-success">Active</h3>
+                                        <span>Status</span>
+                                    </div>
+                                    <div class="col">
+                                        <h3 class="m-b-0">{{ user.position }}</h3>
+                                        <span>Role</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-8 col-lg-7">
+                <!-- Profile Update Form Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Update Your Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Messages -->
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-check-circle me-2"></i>{{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <!-- User Information Section -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="text-primary border-bottom pb-2 mb-3">
+                                        <i class="fas fa-envelope me-2"></i>Account Information
+                                    </h5>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Email Address</label>
+                                    {{ user_form.email }}
+                                    <small class="form-text text-muted">Email address cannot be changed</small>
+                                </div>
+                            </div>
+
+                            <!-- Profile Specific Information -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="text-primary border-bottom pb-2 mb-3">
+                                        <i class="fas fa-id-card me-2"></i>Profile Details
+                                    </h5>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Full Name</label>
+                                    {{ profile_form.full_name }}
+                                </div>
+                                {% if user.position == 'student' %}
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Matriculation Number</label>
+                                        {{ profile_form.matric_number }}
+                                    </div>
+                                {% endif %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Phone Number</label>
+                                    {{ profile_form.phone }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Gender</label>
+                                    {{ profile_form.gender }}
+                                </div>
+                                {% if user.position == 'lecturer' or user.position == 'hod' %}
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label">Bio</label>
+                                        {{ profile_form.bio }}
+                                    </div>
+                                {% endif %}
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Profile Picture</label>
+                                    {{ profile_form.image }}
+                                    <small class="form-text text-muted">Upload a new profile picture (optional)</small>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-times me-2"></i>Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Update Profile
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.profile-photo img {
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.profile-statistics h3 {
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.profile-statistics span {
+    font-size: 12px;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.card-header h4 {
+    margin-bottom: 0;
+    font-weight: 700;
+}
+
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 10px 20px;
+}
+
+.badge {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+/* Readonly field styling */
+input[readonly] {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+input[readonly]:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+</style>
+{% endblock %}

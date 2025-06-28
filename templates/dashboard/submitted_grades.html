@@ -1,0 +1,514 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+
+
+{% block content %}
+
+
+
+
+
+
+        <div class="content-body  ">
+				<div class="container-fluid">
+
+
+
+
+
+		<div class="form-head d-flex flex-wrap mb-sm-4 mb-3 align-items-center">
+			<div class="me-auto  d-lg-block mb-3">
+				<h2 class="text-black mb-0 font-w700">View {{profile.department}} Student Grades</h2>
+			</div>
+
+
+
+
+
+		</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+		<div class="row">
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header pb-0 border-0">
+                                <h4 class="card-title mb-0">Submitted Grades</h4>
+                            </div>
+                            <br>
+
+
+
+                            <!-- Filters -->
+                            <div class="px-3 pb-3">
+                                <div class="bg-light rounded p-3 mb-3">
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-md-2">
+                                            <h6 class="mb-0 text-muted">
+                                                <i class="fas fa-filter me-2"></i>Filter Grades:
+                                            </h6>
+                                        </div>
+
+                                        <!-- Level Filter -->
+                                        <div class="col-md-2">
+                                            <label class="form-label mb-1 text-muted small">
+                                                <i class="fas fa-layer-group me-1"></i>Level
+                                            </label>
+                                            <select id="levelFilter" class="form-select form-select-sm">
+                                                <option value="">All Levels</option>
+                                                {% for level in levels %}
+                                                <option value="{{ level.name }}">{{ level.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <!-- Semester Filter -->
+                                        <div class="col-md-2">
+                                            <label class="form-label mb-1 text-muted small">
+                                                <i class="fas fa-calendar me-1"></i>Semester
+                                            </label>
+                                            <select id="semesterFilter" class="form-select form-select-sm">
+                                                <option value="">All Semesters</option>
+                                                {% for semester in semesters %}
+                                                <option value="{{ semester.name }}">{{ semester.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <!-- Course Filter -->
+                                        <div class="col-md-4">
+                                            <label class="form-label mb-1 text-muted small">
+                                                <i class="fas fa-book me-1"></i>Course
+                                            </label>
+                                            <select id="courseFilter" class="form-select form-select-sm" disabled>
+                                                <option value="">Select Level and Semester first</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Clear Button -->
+                                        <div class="col-md-2" style="margin-top: 1em;">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()" title="Clear all filters">
+                                                <i class="fas fa-times me-1"></i>Clear
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Course Selection Message -->
+                            <div class="card-body" id="defaultState">
+                                <div class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-search fa-4x text-muted"></i>
+                                    </div>
+                                    <h5 class="text-muted">Select a Course to View Grades</h5>
+                                    <p class="text-muted">Use the filters above to select Level, Semester, and Course to view student grades.</p>
+                                </div>
+                            </div>
+
+                            <!-- Grades Table (Hidden by default) -->
+                            <div class="card-body" id="gradesTableContainer" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <!-- <h5 class="mb-0" id="courseTitle">
+                                        <i class="fas fa-book me-2"></i><span></span>
+                                    </h5> -->
+                                    <span class="badge bg-primary" id="gradesCount">0 grades</span>
+                                </div>
+
+                                <!-- Course Actions - Moved to Top -->
+                                <div class="mb-3 p-3  rounded d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">
+
+                                    <h5 class="mb-0" id="courseTitle">
+                                        <i class="fas fa-book me-2"></i><span id="courseInfo"></span>
+                                    </h5>
+
+                                            <!-- <i class="fas fa-info-circle me-1"></i>
+                                            <span id="courseInfo"></span> -->
+                                        </small>
+                                    </div>
+                                    <div id="courseActions">
+                                        <!-- Single Toggle Form -->
+                                        <form method="post" action="#" class="d-inline" id="toggleForm">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm px-3" id="toggleBtn">
+                                                <i class="fa me-1" id="toggleIcon"></i>
+                                                <span id="toggleText">Action</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+
+
+
+
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="gradesTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Student Name</th>
+                                                <th>Matric No</th>
+                                                <th>Level</th>
+                                                <th>Semester</th>
+                                                <th>Lecturer</th>
+                                                <th>Score</th>
+                                                <th>Grade</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="gradesTableBody">
+                                            <!-- Grades will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+
+                            <!-- Hidden data for JavaScript -->
+                            <script type="application/json" id="grades-data">
+                                [
+                                    {% for grade in grades %}
+                                    {
+                                        "id": {{ grade.id }},
+                                        "student_name": "{{ grade.student.full_name|escapejs }}",
+                                        "matric_number": "{{ grade.student.matric_number }}",
+                                        "level": "{{ grade.student.level.name }}",
+                                        "semester": "{{ grade.semester.name }}",
+                                        "score": {{ grade.score }},
+                                        "grade": "{{ grade.grade }}",
+                                        "status": "{{ grade.status }}",
+                                        "lecturer": "{{ grade.lecturer.user.username|escapejs }}",
+                                        "course": {
+                                            "id": {{ grade.course.id }},
+                                            "title": "{{ grade.course.title|escapejs }}",
+                                            "code": "{{ grade.course.code }}",
+                                            "level": "{{ grade.course.level.name }}",
+                                            "semester": "{{ grade.course.semester.name }}"
+                                        }
+                                    }{% if not forloop.last %},{% endif %}
+                                    {% endfor %}
+                                ]
+                            </script>
+
+                            <script type="application/json" id="courses-data">
+                                [
+                                    {% for course in courses %}
+                                    {
+                                        "id": {{ course.id }},
+                                        "title": "{{ course.title|escapejs }}",
+                                        "code": "{{ course.code }}",
+                                        "level": "{{ course.level.name }}",
+                                        "semester": "{{ course.semester.name }}"
+                                    }{% if not forloop.last %},{% endif %}
+                                    {% endfor %}
+                                ]
+                            </script>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+		</div>
+
+	</div>
+
+        </div>
+
+
+
+
+
+
+            <style>
+                .grade-group {
+                    transition: all 0.3s ease;
+                }
+                .grade-group:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+                }
+                .course-header {
+                    position: relative;
+                    overflow: hidden;
+                }
+                .course-header::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+                    pointer-events: none;
+                }
+                .grade-row:hover {
+                    background-color: #f8f9fa !important;
+                }
+                .avatar-title {
+                    font-size: 12px;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .table th {
+                    font-weight: 600;
+                    font-size: 13px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .badge {
+                    font-size: 11px;
+                }
+                .course-content {
+                    position: relative;
+                }
+                .empty-state {
+                    animation: fadeIn 0.5s ease-in;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            </style>
+
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const levelFilter = document.getElementById("levelFilter");
+                const semesterFilter = document.getElementById("semesterFilter");
+                const courseFilter = document.getElementById("courseFilter");
+                const defaultState = document.getElementById("defaultState");
+                const gradesTableContainer = document.getElementById("gradesTableContainer");
+
+                // Load data
+                const allGrades = JSON.parse(document.getElementById('grades-data').textContent || '[]');
+                const allCourses = JSON.parse(document.getElementById('courses-data').textContent || '[]');
+
+                // Show default state (course selection message)
+                function showDefaultState() {
+                    defaultState.style.display = 'block';
+                    gradesTableContainer.style.display = 'none';
+                }
+
+                // Show grades table for selected course
+                function showGradesTable(courseTitle) {
+                    defaultState.style.display = 'none';
+                    gradesTableContainer.style.display = 'block';
+
+                    // Update course title
+                    document.getElementById('courseTitle').querySelector('span').textContent = courseTitle;
+
+                    // Filter grades for selected course
+                    const selectedCourse = courseFilter.value;
+                    const courseGrades = allGrades.filter(grade => grade.course.title === selectedCourse);
+
+                    // Update grades count
+                    document.getElementById('gradesCount').textContent = courseGrades.length + ' grades';
+
+                    // Populate table
+                    const tbody = document.getElementById('gradesTableBody');
+                    tbody.innerHTML = '';
+
+                    courseGrades.forEach((grade, index) => {
+                        const row = document.createElement('tr');
+
+                        const getScoreColor = (score) => {
+                            if (score >= 70) return 'text-success';
+                            if (score >= 60) return 'text-primary';
+                            if (score >= 50) return 'text-warning';
+                            return 'text-danger';
+                        };
+
+                        const getGradeColor = (grade) => {
+                            switch(grade) {
+                                case 'A': return 'bg-success';
+                                case 'B': return 'bg-primary';
+                                case 'C': return 'bg-warning text-dark';
+                                case 'D': return 'bg-orange text-white';
+                                default: return 'bg-danger';
+                            }
+                        };
+
+                        const getStatusBadge = (status) => {
+                            switch(status) {
+                                case 'submitted': return 'bg-warning text-dark';
+                                case 'approved': return 'bg-success';
+                                default: return 'bg-secondary';
+                            }
+                        };
+
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${grade.student_name}</td>
+                            <td>${grade.matric_number}</td>
+                            <td><span class="badge bg-info">${grade.level}</span></td>
+                            <td><span class="badge bg-secondary">${grade.semester}</span></td>
+                            <td>${grade.lecturer}</td>
+                            <td><span class="fw-bold ${getScoreColor(grade.score)}">${grade.score}%</span></td>
+                            <td><span class="badge ${getGradeColor(grade.grade)}">${grade.grade}</span></td>
+                            <td><span class="badge ${getStatusBadge(grade.status)}">${grade.status}</span></td>
+                        
+                        `;
+
+                        tbody.appendChild(row);
+                    });
+
+                    // Update course info and toggle button
+                    const courseData = courseGrades[0]?.course;
+                    if (courseData) {
+                        document.getElementById('courseInfo').textContent =
+                            `${courseData.title} (${courseData.code}) - ${courseData.level} ${courseData.semester}`;
+
+                        // Check if grades are submitted or approved
+                        const hasSubmittedGrades = courseGrades.some(grade => grade.status === 'submitted');
+                        const hasApprovedGrades = courseGrades.some(grade => grade.status === 'approved');
+
+                        const toggleForm = document.getElementById('toggleForm');
+                        const toggleBtn = document.getElementById('toggleBtn');
+                        const toggleIcon = document.getElementById('toggleIcon');
+                        const toggleText = document.getElementById('toggleText');
+
+                        // Configure button based on grade status
+                        if (hasSubmittedGrades && !hasApprovedGrades) {
+                            // All grades are submitted - show approve button
+                            toggleForm.action = `/department/approve/${courseData.id}/`;
+                            toggleBtn.className = 'btn btn-success btn-sm px-3';
+                            toggleIcon.className = 'fa fa-check-circle me-1';
+                            toggleText.textContent = 'Approve All Grades';
+
+                            toggleBtn.onclick = function(e) {
+                                console.log('Approve button clicked for course:', courseData.title);
+                                return confirm(`Are you sure you want to approve all grades for ${courseData.title}?`);
+                            };
+                        } else if (hasApprovedGrades && !hasSubmittedGrades) {
+                            // All grades are approved - show disapprove button
+                            toggleForm.action = `/department/disapprove/${courseData.id}/`;
+                            toggleBtn.className = 'btn btn-warning btn-sm px-3';
+                            toggleIcon.className = 'fa fa-times-circle me-1';
+                            toggleText.textContent = 'Disapprove All Grades';
+
+                            toggleBtn.onclick = function(e) {
+                                console.log('Disapprove button clicked for course:', courseData.title);
+                                return confirm(`Are you sure you want to disapprove all grades for ${courseData.title}? This will change them back to submitted status.`);
+                            };
+                        } else if (hasSubmittedGrades && hasApprovedGrades) {
+                            // Mixed status - default to approve remaining
+                            toggleForm.action = `/department/approve/${courseData.id}/`;
+                            toggleBtn.className = 'btn btn-success btn-sm px-3';
+                            toggleIcon.className = 'fa fa-check-circle me-1';
+                            toggleText.textContent = 'Approve Remaining';
+
+                            toggleBtn.onclick = function(e) {
+                                return confirm(`Approve remaining submitted grades for ${courseData.title}?`);
+                            };
+                        } else {
+                            // Hide button if no grades
+                            toggleForm.style.display = 'none';
+                        }
+                    }
+                }
+
+                // Update course dropdown based on level and semester
+                function updateCourseDropdown() {
+                    const selectedLevel = levelFilter.value;
+                    const selectedSemester = semesterFilter.value;
+
+                    // Clear current options
+                    courseFilter.innerHTML = '<option value="">Select a Course</option>';
+
+                    // If both level and semester are selected, populate courses
+                    if (selectedLevel && selectedSemester) {
+                        courseFilter.disabled = false;
+
+                        // Filter courses that match both level and semester
+                        const filteredCourses = allCourses.filter(course =>
+                            course.level === selectedLevel && course.semester === selectedSemester
+                        );
+
+                        // Add filtered courses to dropdown
+                        filteredCourses.forEach(course => {
+                            const option = document.createElement('option');
+                            option.value = course.title;
+                            option.textContent = `${course.title} (${course.code})`;
+                            courseFilter.appendChild(option);
+                        });
+
+                        if (filteredCourses.length === 0) {
+                            courseFilter.innerHTML = '<option value="">No courses found for this level/semester</option>';
+                            courseFilter.disabled = true;
+                        }
+                    } else {
+                        // Disable course dropdown if level or semester not selected
+                        courseFilter.disabled = true;
+                        if (!selectedLevel && !selectedSemester) {
+                            courseFilter.innerHTML = '<option value="">Select Level and Semester first</option>';
+                        } else if (!selectedLevel) {
+                            courseFilter.innerHTML = '<option value="">Select Level first</option>';
+                        } else if (!selectedSemester) {
+                            courseFilter.innerHTML = '<option value="">Select Semester first</option>';
+                        }
+                    }
+                }
+
+                // Clear filters function
+                window.clearFilters = function() {
+                    levelFilter.value = '';
+                    semesterFilter.value = '';
+                    courseFilter.value = '';
+
+                    // Reset course dropdown
+                    courseFilter.innerHTML = '<option value="">Select Level and Semester first</option>';
+                    courseFilter.disabled = true;
+
+                    showDefaultState();
+                };
+
+                // Event listeners
+                levelFilter.addEventListener("change", function() {
+                    courseFilter.value = ''; // Reset course selection
+                    updateCourseDropdown();
+                    showDefaultState();
+                });
+
+                semesterFilter.addEventListener("change", function() {
+                    courseFilter.value = ''; // Reset course selection
+                    updateCourseDropdown();
+                    showDefaultState();
+                });
+
+                courseFilter.addEventListener("change", function() {
+                    if (this.value) {
+                        showGradesTable(this.value);
+                    } else {
+                        showDefaultState();
+                    }
+                });
+
+                // Initialize - show default state
+                showDefaultState();
+            });
+            </script>
+
+{% endblock %}
+
+
+

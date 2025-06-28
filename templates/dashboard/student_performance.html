@@ -1,0 +1,682 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="content-body">
+    <div class="container-fluid">
+
+        {% comment %} <!-- Page Header
+        <div class="row page-titles">
+            <div class="col-xl-12">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="heading mb-0">Welcome back, {{ student.full_name|default:user.username }}! 👋</h2>
+                        <p class="text-muted mb-0">{{ performance_data.current_level }} - {{ performance_data.department }}</p>
+                    </div>
+                    <div>
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item active">Student Dashboard</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Overview Cards -->
+        <div class="row">
+            <div class="col-xl-3 col-lg-6 col-sm-6">
+                <div class="widget-stat card">
+                    <div class="card-body p-4">
+                        <div class="media ai-icon">
+                            <span class="me-3 bgl-primary text-primary">
+                                <i class="fas fa-graduation-cap"></i>
+                            </span>
+                            <div class="media-body">
+                                <p class="mb-1">Total Courses</p>
+                                <h4 class="mb-0">{{ performance_data.total_courses }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-6 col-sm-6">
+                <div class="widget-stat card">
+                    <div class="card-body p-4">
+                        <div class="media ai-icon">
+                            <span class="me-3 bgl-success text-success">
+                                <i class="fas fa-chart-line"></i>
+                            </span>
+                            <div class="media-body">
+                                <p class="mb-1">Average GPA</p>
+                                <h4 class="mb-0">{{ overall_stats.average_gpa|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-6 col-sm-6">
+                <div class="widget-stat card">
+                    <div class="card-body p-4">
+                        <div class="media ai-icon">
+                            <span class="me-3 bgl-warning text-warning">
+                                <i class="fas fa-percentage"></i>
+                            </span>
+                            <div class="media-body">
+                                <p class="mb-1">Pass Rate</p>
+                                <h4 class="mb-0">{{ pass_rate }}%</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-6 col-sm-6">
+                <div class="widget-stat card">
+                    <div class="card-body p-4">
+                        <div class="media ai-icon">
+                            <span class="me-3 bgl-info text-info">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            <div class="media-body">
+                                <p class="mb-1">Semesters</p>
+                                <h4 class="mb-0">{{ performance_data.total_semesters }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> --> {% endcomment %}
+
+        <!-- Charts Row 1 -->
+        <div class="row">
+            <div class="col-xl-8 col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">📈 GPA Trend Analysis</h4>
+                        <small class="text-muted">Track your academic progress over time</small>
+                    </div>
+                    <div class="card-body" >
+                        <canvas id="gpaLineChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">🥧 Grade Distribution</h4>
+                        <small class="text-muted">Breakdown of your grades</small>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="gradeDistributionChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="row">
+            <div class="col-xl-8 col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">📊 Latest Semester Performance</h4>
+                        <small class="text-muted">Course-wise performance in your latest semester</small>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="coursePerformanceChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-4 col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">🎯 Pass/Fail Ratio</h4>
+                        <small class="text-muted">Overall success rate</small>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="passFailChart" height="300"></canvas>
+                        <div class="mt-3 text-center">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="text-success">{{ passed_courses }}</h5>
+                                    <small>Passed</small>
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="text-danger">{{ failed_courses }}</h5>
+                                    <small>Failed</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Semester Performance Comparison -->
+        <div class="row">
+            <!-- Semester GPA Comparison Chart -->
+            <div class="col-xl-8 col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">📊 Semester Performance Comparison</h4>
+                        <small class="text-muted">Track your academic progress across all semesters</small>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="semesterComparisonChart" height="180"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Semester Statistics -->
+            <div class="col-xl-4 col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">📈 Semester Insights</h4>
+                        <small class="text-muted">Key performance metrics</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="semester-stats">
+                            <div class="stat-item mb-3 p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 text-success">Best Semester</h6>
+                                        <small class="text-muted">Highest GPA achieved</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-success">{{ overall_stats.highest_gpa|floatformat:2 }}</h5>
+                                        <small class="text-muted">GPA</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stat-item mb-3 p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 text-white">Improvement Needed</h6>
+                                        <small class="text-muted">Lowest GPA semester</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-white">{{ overall_stats.lowest_gpa|floatformat:2 }}</h5>
+                                        <small class="text-muted">GPA</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stat-item mb-3 p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 text-primary">Average Performance</h6>
+                                        <small class="text-muted">Overall CGPA</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-primary">{{ overall_stats.average_gpa|floatformat:2 }}</h5>
+                                        <small class="text-muted">CGPA</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stat-item mb-3 p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 text-info">Consistency</h6>
+                                        <small class="text-muted">Performance stability</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-info">{{ pass_rate|floatformat:0 }}%</h5>
+                                        <small class="text-muted">Success Rate</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance by Level -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">📚 Performance by Academic Level</h4>
+                        <small class="text-muted">Compare your performance across different levels</small>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="levelPerformanceChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Semester Comparison Table -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">📋 Detailed Semester Performance Analysis</h4>
+                        <small class="text-muted">Comprehensive semester-by-semester breakdown</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Semester</th>
+                                        <th>Courses</th>
+                                        <th>TCU</th>
+                                        <th>TGP</th>
+                                        <th>GPA</th>
+                                        <th>CGPA</th>
+                                        <th>Trend</th>
+                                        <th>Performance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for semester, data in semester_performance.items %}
+                                    <tr>
+                                        <td><strong>{{ semester }}</strong></td>
+                                        <td>{{ data.courses_count|default:5 }}</td>
+                                        <td>{{ data.tcu|floatformat:0|default:15 }}</td>
+                                        <td>{{ data.tgp|floatformat:2|default:48.0 }}</td>
+                                        <td>
+                                            <span class="badge
+                                                {% if data.gpa >= 3.5 %}badge-success
+                                                {% elif data.gpa >= 2.5 %}badge-warning
+                                                {% else %}badge-danger{% endif %} px-3 py-2">
+                                                {{ data.gpa|floatformat:2|default:3.2 }}
+                                            </span>
+                                        </td>
+                                        <td>{{ overall_stats.average_gpa|floatformat:2 }}</td>
+                                        <td>
+                                            {% if forloop.counter > 1 %}
+                                                {% if data.gpa > 3.0 %}
+                                                <i class="fas fa-arrow-up text-success"></i> Improving
+                                                {% elif data.gpa < 2.5 %}
+                                                <i class="fas fa-arrow-down text-danger"></i> Declining
+                                                {% else %}
+                                                <i class="fas fa-minus text-warning"></i> Stable
+                                                {% endif %}
+                                            {% else %}
+                                            <i class="fas fa-star text-info"></i> First
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.gpa >= 3.5 %}
+                                            <span class="badge badge-success">Excellent</span>
+                                            {% elif data.gpa >= 3.0 %}
+                                            <span class="badge badge-primary">Very Good</span>
+                                            {% elif data.gpa >= 2.5 %}
+                                            <span class="badge badge-warning">Good</span>
+                                            {% elif data.gpa >= 2.0 %}
+                                            <span class="badge badge-info">Fair</span>
+                                            {% else %}
+                                            <span class="badge badge-danger">Needs Improvement</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <!-- Sample data for demonstration -->
+                                    <tr>
+                                        <td><strong>Level 100 - First Semester</strong></td>
+                                        <td>5</td>
+                                        <td>15</td>
+                                        <td>48.0</td>
+                                        <td><span class="badge badge-success px-3 py-2">3.20</span></td>
+                                        <td>3.20</td>
+                                        <td><i class="fas fa-star text-info"></i> First</td>
+                                        <td><span class="badge badge-primary">Very Good</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Level 100 - Second Semester</strong></td>
+                                        <td>5</td>
+                                        <td>15</td>
+                                        <td>52.5</td>
+                                        <td><span class="badge badge-success px-3 py-2">3.50</span></td>
+                                        <td>3.35</td>
+                                        <td><i class="fas fa-arrow-up text-success"></i> Improving</td>
+                                        <td><span class="badge badge-success">Excellent</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Level 200 - First Semester</strong></td>
+                                        <td>5</td>
+                                        <td>15</td>
+                                        <td>57.0</td>
+                                        <td><span class="badge badge-success px-3 py-2">3.80</span></td>
+                                        <td>3.50</td>
+                                        <td><i class="fas fa-arrow-up text-success"></i> Improving</td>
+                                        <td><span class="badge badge-success">Excellent</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Level 200 - Second Semester</strong></td>
+                                        <td>5</td>
+                                        <td>15</td>
+                                        <td>51.0</td>
+                                        <td><span class="badge badge-success px-3 py-2">3.40</span></td>
+                                        <td>3.48</td>
+                                        <td><i class="fas fa-arrow-down text-warning"></i> Slight Decline</td>
+                                        <td><span class="badge badge-primary">Very Good</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Statistics Table -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">📋 Detailed Performance Statistics</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>Value</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Highest GPA</strong></td>
+                                        <td>{{ overall_stats.highest_gpa|floatformat:2 }}</td>
+                                        <td><span class="badge badge-success">Peak Performance</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Lowest GPA</strong></td>
+                                        <td>{{ overall_stats.lowest_gpa|floatformat:2 }}</td>
+                                        <td><span class="badge badge-warning">Needs Improvement</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Credit Units</strong></td>
+                                        <td>{{ overall_stats.total_credit_units|floatformat:0 }}</td>
+                                        <td><span class="badge badge-info">Academic Load</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Grade Points</strong></td>
+                                        <td>{{ overall_stats.total_grade_points|floatformat:2 }}</td>
+                                        <td><span class="badge badge-primary">Cumulative</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Current Level</strong></td>
+                                        <td>{{ performance_data.current_level }}</td>
+                                        <td><span class="badge badge-secondary">Academic Level</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Department</strong></td>
+                                        <td>{{ performance_data.department }}</td>
+                                        <td><span class="badge badge-dark">Program</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // GPA Trend Line Chart
+    new Chart(document.getElementById('gpaLineChart'), {
+        type: 'line',
+        data: {
+            labels: {{ semester_labels|safe }},
+            datasets: [{
+                label: 'GPA',
+                data: {{ gpa_trend|safe }},
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ffffff',     // white center for contrast
+                pointBorderColor: '#007bff',         // blue border
+                pointBorderWidth: 4,                 // bold border
+                pointRadius: 8,                      // visible point
+                pointHoverRadius: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    min: 0,
+                    max: 4.5,  // give space above 4.00
+                    ticks: {
+                        stepSize: 0.5
+                    },
+                    title: {
+                        display: true,
+                        text: 'GPA (0.00 - 4.00)'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'GPA: ' + parseFloat(context.parsed.y).toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+
+
+
+    // Grade Distribution Pie Chart
+    const gradeData = {{ grade_distribution|safe }};
+    new Chart(document.getElementById('gradeDistributionChart'), {
+        type: 'pie',
+        data: {
+            labels: Object.keys(gradeData),
+            datasets: [{
+                data: Object.values(gradeData),
+                backgroundColor: [
+                    '#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545', '#6f42c1', '#20c997'
+                ],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        }
+    });
+
+    // Course Performance Chart
+    const courseData = {{ course_performance|safe }};
+    new Chart(document.getElementById('coursePerformanceChart'), {
+        type: 'bar',
+        data: {
+            labels: courseData.map(item => item.course),
+            datasets: [
+                {
+                    label: 'Score',
+                    data: courseData.map(item => item.score),
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)'
+                },
+                {
+                    label: 'Grade Point',
+                    data: courseData.map(item => item.grade_point),
+                    backgroundColor: 'rgba(255, 99, 132, 0.8)'
+                }
+            ]
+        }
+    });
+
+    // Pass/Fail Chart
+    new Chart(document.getElementById('passFailChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Passed', 'Failed'],
+            datasets: [{
+                data: [{{ passed_courses }}, {{ failed_courses }}],
+                backgroundColor: ['#28a745', '#dc3545'],
+                borderColor: '#fff',
+                borderWidth: 3
+            }]
+        }
+    });
+
+    // Semester Comparison Chart
+    const semesterCtx = document.getElementById('semesterComparisonChart').getContext('2d');
+    new Chart(semesterCtx, {
+        type: 'line',
+        data: {
+            labels: {{ semester_labels|safe }},
+            datasets: [{
+                label: 'Your GPA',
+                data: {{ gpa_trend|safe }},
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#007bff',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 8,
+                pointHoverRadius: 10
+            }, {
+                label: 'Target GPA (3.5)',
+                data: Array({{ semester_labels|length|default:4 }}).fill(3.5),
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0,
+                pointHoverRadius: 0
+            }, {
+                label: 'Minimum GPA (2.0)',
+                data: Array({{ semester_labels|length|default:4 }}).fill(2.0),
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 2,
+                borderDash: [10, 5],
+                fill: false,
+                pointRadius: 0,
+                pointHoverRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        title: function(context) {
+                            return 'Semester: ' + context[0].label;
+                        },
+                        label: function(context) {
+                            if (context.datasetIndex === 0) {
+                                return 'Your GPA: ' + context.parsed.y.toFixed(2);
+                            }
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(1);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 4.5,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    },
+                    ticks: {
+                        stepSize: 0.5
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+
+    // Updated Level Performance Grouped Bar Chart
+    const levelData = {{ level_performance|safe }};
+    const levelLabels = Object.keys(levelData);
+    const avgGPAData = Object.values(levelData).map(item => item.avg_gpa);
+    const totalCoursesData = Object.values(levelData).map(item => item.total_courses);
+
+    new Chart(document.getElementById('levelPerformanceChart'), {
+        type: 'bar',
+        data: {
+            labels: levelLabels,
+            datasets: [
+                {
+                    label: 'Average GPA',
+                    data: avgGPAData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.8)'
+                },
+                {
+                    label: 'Total Courses',
+                    data: totalCoursesData,
+                    backgroundColor: 'rgba(153, 102, 255, 0.8)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Values'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

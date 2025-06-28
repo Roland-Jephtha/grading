@@ -1,0 +1,262 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Student Result - {{ result.student.full_name }}{% endblock %}
+
+{% block content %}
+
+<div class="content-body">
+    <div class="container-fluid">
+
+        <div class="form-head d-flex flex-wrap mb-sm-4 mb-3 align-items-center">
+            <div class="me-auto d-lg-block mb-3">
+                <h2 class="text-black mb-0 font-w700">Official Result - {{ result.student.full_name }}</h2>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i>
+                    {{ result.department.name }} Department - {{ result.level.name }} - {{ result.semester.name }}
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'student_results_view' %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Results
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i>
+                    Print Result
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <!-- Institution Header -->
+                        <div class="text-center mb-4">
+                            <h4 class="fw-bold text-uppercase mb-1">PETROLEUM TRAINING INSTITUTE, EFFURUN</h4>
+                            <h5 class="text-muted mb-1">SCHOOL OF INDUSTRIAL CONTINUING EDUCATION (SICE)</h5>
+                            <h6 class="text-muted mb-1">DEPARTMENT OF {{ result.department.name|upper }}</h6>
+                            <h6 class="text-muted mb-3">SECOND SEMESTER EXAMINATIONS RESULTS {{ result.semester.session|default:"2023/2024" }}</h6>
+                            
+                            <div class="row justify-content-center">
+                                <div class="col-md-8">
+                                    <p class="mb-1"><strong>PROGRAMME:</strong> HIGHER NATIONAL DIPLOMA {{ result.department.name|upper }}</p>
+                                    <p class="mb-1"><strong>SEMESTER:</strong> {{ result.semester.name|upper }} SEMESTER RESULTS</p>
+                                    <p class="mb-3"><strong>COURSE CODE:</strong> {{ result.department.code|default:"PTI" }}/ICE/ISE - HND/{{ result.level.name }}/INS/21</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Student Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <p><strong>NAMES:</strong> {{ result.student.full_name|upper }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>MATRICULATION NUMBERS:</strong> {{ result.student.matric_number }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Examination Details -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <p class="text-center">
+                                    <strong>DATE OF EXAMINATIONS:</strong> 
+                                    {% if result.exam_date_start and result.exam_date_end %}
+                                        {{ result.exam_date_start|date:"jS F" }} - {{ result.exam_date_end|date:"jS F Y" }}
+                                    {% else %}
+                                        22ND NOVEMBER - 15TH DECEMBER 2024
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Results Table -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr class="text-center">
+                                        <th rowspan="2" class="align-middle">S/N</th>
+                                        <th rowspan="2" class="align-middle">NAMES</th>
+                                        <th rowspan="2" class="align-middle">MATRICULATION NUMBERS</th>
+                                        <th colspan="{{ result.grade_score.count }}" class="text-center">COURSE CODES / CREDIT UNITS</th>
+                                        <th rowspan="2" class="align-middle">TCU</th>
+                                        <th rowspan="2" class="align-middle">TGP</th>
+                                        <th rowspan="2" class="align-middle">GPA</th>
+                                        <th rowspan="2" class="align-middle">REMARKS</th>
+                                    </tr>
+                                    <tr class="text-center">
+                                        {% for grade in result.grade_score.all %}
+                                            <th class="text-center" style="min-width: 80px;">
+                                                <div><strong>{{ grade.course.code }}</strong></div>
+                                                <div class="text-muted small">{{ grade.course.credit_unit }}</div>
+                                            </th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="text-center">
+                                        <td><strong>1</strong></td>
+                                        <td><strong>{{ result.student.full_name|upper }}</strong></td>
+                                        <td><strong>{{ result.student.matric_number }}</strong></td>
+                                        {% for grade in result.grade_score.all %}
+                                            <td>
+                                                <div class="fw-bold">{{ grade.grade }}</div>
+                                                <div class="text-muted small">{{ grade.score }}</div>
+                                            </td>
+                                        {% endfor %}
+                                        <td class="fw-bold">{{ result.tcu }}</td>
+                                        <td class="fw-bold text-primary">{{ result.tgp|floatformat:2 }}</td>
+                                        <td class="fw-bold text-success">{{ result.gpa|floatformat:2 }}</td>
+                                        <td>
+                                            {% if result.remark == 'passed' %}
+                                                <span class="badge bg-success">Passed</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Failed</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Course Details Table -->
+                        <div class="mt-4">
+                            <h6 class="fw-bold mb-3">COURSE DETAILS</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Course Code</th>
+                                            <th>Course Title</th>
+                                            <th>Credit Unit</th>
+                                            <th>Score</th>
+                                            <th>Grade</th>
+                                            <th>Grade Point</th>
+                                            <th>TCP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for grade in result.grade_score.all %}
+                                            <tr>
+                                                <td><strong>{{ grade.course.code }}</strong></td>
+                                                <td>{{ grade.course.title }}</td>
+                                                <td class="text-center">{{ grade.course.credit_unit }}</td>
+                                                <td class="text-center">{{ grade.score }}</td>
+                                                <td class="text-center"><strong>{{ grade.grade }}</strong></td>
+                                                <td class="text-center">{{ grade.grade_point|floatformat:2 }}</td>
+                                                <td class="text-center text-primary"><strong>{{ grade.grade_point|floatformat:2 }}</strong></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="2">TOTALS</th>
+                                            <th class="text-center">{{ result.tcu }}</th>
+                                            <th colspan="3"></th>
+                                            <th class="text-center text-primary"><strong>{{ result.tgp|floatformat:2 }}</strong></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Result Summary</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            <li><strong>Total Credit Units (TCU):</strong> {{ result.tcu }}</li>
+                                            <li><strong>Total Grade Points (TGP):</strong> {{ result.tgp|floatformat:2 }}</li>
+                                            <li><strong>Grade Point Average (GPA):</strong> {{ result.gpa|floatformat:2 }}</li>
+                                            <li><strong>Status:</strong> 
+                                                {% if result.remark == 'passed' %}
+                                                    <span class="text-success fw-bold">PASSED</span>
+                                                {% else %}
+                                                    <span class="text-danger fw-bold">FAILED</span>
+                                                {% endif %}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Student Information</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            <li><strong>Name:</strong> {{ result.student.full_name }}</li>
+                                            <li><strong>Matric Number:</strong> {{ result.student.matric_number }}</li>
+                                            <li><strong>Level:</strong> {{ result.level.name }}</li>
+                                            <li><strong>Department:</strong> {{ result.department.name }}</li>
+                                            <li><strong>Semester:</strong> {{ result.semester.name }}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12 text-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="window.print()">
+                                        <i class="fas fa-print me-1"></i>
+                                        Print Result
+                                    </button>
+                                    <form method="post" action="{% url 'publish_student_result' result.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-{{ result.status == 'published' and 'warning' or 'success' }}"
+                                                onclick="return confirm('{{ result.status == 'published' and 'Unpublish' or 'Publish' }} this result?')">
+                                            <i class="fas fa-{{ result.status == 'published' and 'eye-slash' or 'check' }} me-1"></i>
+                                            {{ result.status == 'published' and 'Unpublish' or 'Publish' }} Result
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'student_results_view' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-1"></i>
+                                        Back to Results
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .card-header, nav, .navbar {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table-bordered {
+        border: 2px solid #000 !important;
+    }
+    
+    .table-bordered th,
+    .table-bordered td {
+        border: 1px solid #000 !important;
+    }
+    
+    body {
+        font-size: 12px;
+    }
+    
+    .container-fluid {
+        padding: 0;
+    }
+}
+</style>
+
+{% endblock %}
