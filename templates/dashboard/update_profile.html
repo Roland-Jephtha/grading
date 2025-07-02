@@ -134,6 +134,20 @@
                                     </div>
                                 {% endif %}
                                 <div class="col-md-6 mb-3">
+                                    <label class="form-label">Department</label>
+                                    {{ profile_form.department }}
+                                </div>
+                                {% if user.position == 'student' %}
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Level</label>
+                                        {{ profile_form.level }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Semester</label>
+                                        {{ profile_form.semester }}
+                                    </div>
+                                {% endif %}
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label">Phone Number</label>
                                     {{ profile_form.phone }}
                                 </div>

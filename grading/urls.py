@@ -30,6 +30,9 @@ urlpatterns = [
     # Profile Update URL
     path('update-profile/', update_profile, name='update_profile'),
 
+    # Grade Management URLs
+    path('delete-grade/<int:grade_id>/', delete_grade, name='delete_grade'),
+
 
 
 

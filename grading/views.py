@@ -1348,3 +1348,50 @@ def update_profile(request):
 
     return render(request, 'dashboard/update_profile.html', context)
 
+
+@login_required
+def delete_grade(request, grade_id):
+    """Delete a grade with proper authorization"""
+    try:
+        grade = Grade.objects.get(id=grade_id)
+
+        # Check if user is authorized to delete this grade
+        if request.user.position == 'lecturer':
+            lecturer_profile = LecturerProfile.objects.get(user=request.user)
+            if grade.lecturer != lecturer_profile:
+                messages.error(request, 'You are not authorized to delete this grade.')
+                return redirect('grading')
+        elif request.user.position == 'hod':
+            hod_profile = HodProfile.objects.get(user=request.user)
+            if grade.department != hod_profile.department:
+                messages.error(request, 'You are not authorized to delete this grade.')
+                return redirect('grading')
+        else:
+            messages.error(request, 'You are not authorized to delete grades.')
+            return redirect('grading')
+
+        # Check if grade can be deleted (only draft grades)
+        if grade.status != 'draft':
+            messages.error(request, f'Cannot delete {grade.status} grades. Only draft grades can be deleted.')
+            return redirect('grading')
+
+        # Store grade info for success message
+        student_name = grade.student.full_name
+        course_code = grade.course.code
+
+        # Delete the grade
+        grade.delete()
+
+        messages.success(request, f'Grade for {student_name} in {course_code} has been deleted successfully.')
+        return redirect('grading')
+
+    except Grade.DoesNotExist:
+        messages.error(request, 'Grade not found.')
+        return redirect('grading')
+    except (LecturerProfile.DoesNotExist, HodProfile.DoesNotExist):
+        messages.error(request, 'Profile not found.')
+        return redirect('grading')
+    except Exception as e:
+        messages.error(request, 'An error occurred while deleting the grade.')
+        return redirect('grading')
+

@@ -28,6 +28,7 @@
         {% if user.position == 'student' %}
             <!-- student DASHBOARD -->
             <div class="row">
+               
                 <!-- student Performance Cards -->
                 <div class="col-xl-4 col-lg-6 col-sm-6">
                     <div class="card card-bx bg-primary">
@@ -66,8 +67,8 @@
                         <div class="card-body">
                             <div class="media align-items-center">
                                 <div class="media-body me-3">
-                                    <h2 class="text-white font-w700">{{ student_stats.completed_semesters|default:0 }}</h2>
-                                    <p class="mb-0 text-white font-w600">Semesters</p>
+                                        <h2 class="text-white font-w700">{{profile.department.name}}</h2>
+                                    <p class="mb-0 text-white font-w600">Department</p>
                                 </div>
                                 <div class="d-inline-block">
                                     <i class="fas fa-calendar text-white" style="font-size: 40px;"></i>
@@ -76,6 +77,10 @@
                         </div>
                     </div>
                 </div>
+
+
+
+            
                 
            
             </div>

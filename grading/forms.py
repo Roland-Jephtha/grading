@@ -71,7 +71,7 @@ class GradeForm(forms.ModelForm):
 class StudentProfileForm(forms.ModelForm):
     class Meta:
         model = StudentProfile
-        fields = ['full_name', 'matric_number', 'phone', 'gender', 'image']
+        fields = ['full_name', 'matric_number', 'department', 'level', 'semester', 'phone', 'gender', 'image']
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -80,6 +80,15 @@ class StudentProfileForm(forms.ModelForm):
             'matric_number': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter your matriculation number'
+            }),
+            'department': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'level': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'semester': forms.Select(attrs={
+                'class': 'form-control'
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -109,11 +118,14 @@ class StudentProfileForm(forms.ModelForm):
 class LecturerProfileForm(forms.ModelForm):
     class Meta:
         model = LecturerProfile
-        fields = ['full_name', 'phone', 'bio', 'gender', 'image']
+        fields = ['full_name', 'department', 'phone', 'bio', 'gender', 'image']
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter your full name'
+            }),
+            'department': forms.Select(attrs={
+                'class': 'form-control'
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -148,11 +160,14 @@ class LecturerProfileForm(forms.ModelForm):
 class HodProfileForm(forms.ModelForm):
     class Meta:
         model = HodProfile
-        fields = ['full_name', 'phone', 'bio', 'gender', 'image']
+        fields = ['full_name', 'department', 'phone', 'bio', 'gender', 'image']
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter your full name'
+            }),
+            'department': forms.Select(attrs={
+                'class': 'form-control'
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',

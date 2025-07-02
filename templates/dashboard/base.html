@@ -38,6 +38,8 @@
 
 <!-- JQUERY + TOASTR JS (CDN) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <!-- Custom PTI Logo Styling - Universal for Dashboard and Admin -->
 <style>
@@ -197,10 +199,7 @@
 
 
 
-
-
-
-    
+{% comment %}     
 <!-- TOASTR CONFIGURATION -->
 <script defer>
     document.addEventListener("DOMContentLoaded", function () {
@@ -235,7 +234,7 @@
             {% endfor %}
         {% endif %}
     });
-</script>
+</script> {% endcomment %}
 
 <!-- CUSTOM TOAST STYLE -->
 <style>
@@ -507,7 +506,7 @@
 
 
 <li><a href="{% url 'lecturer_results_view' %}" class="ai-icon" aria-expanded="false">
-    <i class="flaticon-381-user text-info"></i> <!-- Lecturer results icon -->
+<i class="fa-solid fa-file-lines text-success"></i>  <!-- Result sheet -->
     <span class="nav-text">My Students Results</span>
 </a></li>
 
@@ -515,10 +514,7 @@
 
 
 
-<li><a href="performance.html" class="ai-icon" aria-expanded="false">
-    <i class="fas fa-chart-line text-primary"></i> <!-- FontAwesome Performance icon -->
-    <span class="nav-text">Performance</span>
-</a></li>
+
 
 
 <!-- Debug: Lecturer menu items above -->
@@ -535,20 +531,17 @@
 
 
 <li><a href="{% url 'view_all_results' %}" class="ai-icon" aria-expanded="false">
-    <i class="flaticon-381-list text-success"></i> <!-- Results list icon -->
+<i class="fa-solid fa-file-lines text-success"></i>  <!-- Result sheet -->
     <span class="nav-text">View Students Results</span>
 </a></li>
 
 
-<li><a href="performance.html" class="ai-icon" aria-expanded="false">
-    <i class="fas fa-chart-line text-primary"></i> <!-- FontAwesome Performance icon -->
-    <span class="nav-text">Performance</span>
-</a></li>
+
 
 {% elif user.position == 'student' %}
 <!-- 🎓 STUDENT MENU ACTIVE -->
 <li><a href="{% url 'student_my_results' %}" class="ai-icon" aria-expanded="false">
-    <i class="flaticon-381-diploma text-success"></i> <!-- Student results icon -->
+<i class="fa-solid fa-file-lines text-success"></i>  <!-- Result sheet -->
     <span class="nav-text">My Results</span>
 </a></li>
 
@@ -569,7 +562,7 @@
 
 
 <li><a href="{% url 'update_profile' %}" class="ai-icon" aria-expanded="false">
-    <i class="flaticon-381-user text-primary"></i> <!-- User profile icon -->
+    <i class="flaticon-381-user text-info"></i> <!-- Lecturer results icon -->
     <span class="nav-text">Profile</span>
 </a></li>
 
@@ -634,6 +627,129 @@
                                     <script src="{% static 'public/js/custom.min.js' %}" type="text/javascript"></script>
                     <script src="{% static 'public/js/deznav-init.js' %}" type="text/javascript"></script>
 
+<!-- SweetAlert2 -->
+<script src="{% static 'public/vendor/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    {% if messages %}
+        {% for message in messages %}
+            // Detect current theme
+            const isDarkTheme = document.body.classList.contains('dark') ||
+                               document.documentElement.getAttribute('data-theme') === 'dark' ||
+                               document.body.getAttribute('data-theme-version') === 'dark';
+
+            // Theme-based configuration
+            const themeConfig = {
+                background: isDarkTheme ? '#2a2d3a' : '#ffffff',
+                color: isDarkTheme ? '#ffffff' : '#333333',
+                customClass: {
+                    popup: isDarkTheme ? 'dark-theme-popup' : 'light-theme-popup',
+                    title: isDarkTheme ? 'dark-theme-title' : 'light-theme-title',
+                    content: isDarkTheme ? 'dark-theme-content' : 'light-theme-content'
+                }
+            };
+
+            {% if message.tags == 'success' %}
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: '{{ message|escapejs }}',
+                    confirmButtonText: 'OK',
+                    background: themeConfig.background,
+                    color: themeConfig.color,
+                    confirmButtonColor: '#28a745',
+                    iconColor: '#28a745',
+                    customClass: themeConfig.customClass
+                });
+            {% elif message.tags == 'error' %}
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: '{{ message|escapejs }}',
+                    confirmButtonText: 'OK',
+                    background: themeConfig.background,
+                    color: themeConfig.color,
+                    confirmButtonColor: '#dc3545',
+                    iconColor: '#dc3545',
+                    customClass: themeConfig.customClass
+                });
+            {% elif message.tags == 'info' %}
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Information',
+                    text: '{{ message|escapejs }}',
+                    confirmButtonText: 'OK',
+                    background: themeConfig.background,
+                    color: themeConfig.color,
+                    confirmButtonColor: '#17a2b8',
+                    iconColor: '#17a2b8',
+                    customClass: themeConfig.customClass
+                });
+            {% elif message.tags == 'warning' %}
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning!',
+                    text: '{{ message|escapejs }}',
+                    confirmButtonText: 'OK',
+                    background: themeConfig.background,
+                    color: themeConfig.color,
+                    confirmButtonColor: '#ffc107',
+                    iconColor: '#ffc107',
+                    customClass: themeConfig.customClass
+                });
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+});
+</script>
+
+<style>
+/* Dark theme SweetAlert customization */
+.dark-theme-popup {
+    border: 1px solid #495057 !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-theme-title {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.dark-theme-content {
+    color: #e9ecef !important;
+}
+
+/* Light theme SweetAlert customization */
+.light-theme-popup {
+    border: 1px solid #dee2e6 !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15) !important;
+    background: #ffffff !important;
+}
+
+.light-theme-title {
+    color: #333333 !important;
+    font-weight: 600 !important;
+}
+
+.light-theme-content {
+    color: #666666 !important;
+}
+
+/* Button hover effects */
+.swal2-confirm:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Animation improvements */
+.swal2-popup {
+    animation-duration: 0.3s !important;
+}
+</style>
 
 </body>
 

@@ -198,8 +198,21 @@
                                         <td>{{ grade.created|date:"d F Y" }}</td>
                                     <td>
                                         <div class="d-flex">
-                                            <a href="#" class="btn btn-primary shadow btn-xs sharp me-3"><i class="fa fa-pencil"></i></a>
-                                            <a href="#" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-trash"></i></a>
+                                            {% comment %} <a href="#" class="btn btn-primary shadow btn-xs sharp me-3"><i class="fa fa-pencil"></i></a> {% endcomment %}
+                                            {% if grade.status == 'draft' %}
+                                                <a href="javascript:void(0);"
+                                                   onclick="confirmDelete('{{ grade.id }}', '{{ grade.student.full_name }}', '{{ grade.course.code }}')"
+                                                   class="btn btn-danger shadow btn-xs sharp"
+                                                   title="Delete this grade">
+                                                    <i class="fa fa-trash"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="btn btn-danger shadow btn-xs sharp"
+                                                      style="opacity: 0.5; cursor: not-allowed;"
+                                                      title="Only draft grades can be deleted">
+                                                    <i class="fa fa-trash"></i>
+                                                </span>
+                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>
@@ -447,6 +460,45 @@ function fetchCourses() {
 document.getElementById('id_department').addEventListener('change', fetchCourses);
 document.getElementById('id_level').addEventListener('change', fetchCourses);
 document.getElementById('id_semester').addEventListener('change', fetchCourses);
+
+// Delete Grade Function with SweetAlert Confirmation
+function confirmDelete(gradeId, studentName, courseCode) {
+    // Detect current theme for SweetAlert styling
+    const isDarkTheme = document.body.classList.contains('dark') ||
+                       document.documentElement.getAttribute('data-theme') === 'dark' ||
+                       document.body.getAttribute('data-theme-version') === 'dark';
+
+    const themeConfig = {
+        background: isDarkTheme ? '#2a2d3a' : '#ffffff',
+        color: isDarkTheme ? '#ffffff' : '#333333',
+        customClass: {
+            popup: isDarkTheme ? 'dark-theme-popup' : 'light-theme-popup',
+            title: isDarkTheme ? 'dark-theme-title' : 'light-theme-title',
+            content: isDarkTheme ? 'dark-theme-content' : 'light-theme-content'
+        }
+    };
+
+    Swal.fire({
+        title: 'Delete Grade?',
+        html: `Are you sure you want to delete the grade for:<br><strong>${studentName}</strong> in <strong>${courseCode}</strong>?<br><br><span style="color: #dc3545; font-size: 14px;">This action cannot be undone!</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Delete!',
+        cancelButtonText: 'Cancel',
+        background: themeConfig.background,
+        color: themeConfig.color,
+        customClass: themeConfig.customClass,
+        focusConfirm: false,
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect to the delete view
+            window.location.href = `/delete-grade/${gradeId}/`;
+        }
+    });
+}
 
 
 
