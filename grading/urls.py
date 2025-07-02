@@ -33,6 +33,12 @@ urlpatterns = [
     # Grade Management URLs
     path('delete-grade/<int:grade_id>/', delete_grade, name='delete_grade'),
 
+    # HOD Status Toggle URL
+    path('toggle-hod-status/<int:result_id>/', toggle_hod_status, name='toggle_hod_status'),
+
+    # Bulk Publish Results URL
+    path('publish-all-results/', publish_all_results, name='publish_all_results'),
+
 
 
 

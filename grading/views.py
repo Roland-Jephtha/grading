@@ -843,7 +843,8 @@ def view_all_results(request):
         filters = {
             'department': user_department,
             'level_id': level_id,
-            'semester_id': semester_id
+            'semester_id': semester_id,
+            'status': 'approved'
         }
 
         # Get filtered results
@@ -935,12 +936,14 @@ def lecturer_results_view(request):
         # Get unique students from these grades
         student_ids = lecturer_grades.values_list('student_id', flat=True).distinct()
 
-        # Get results for these students
+        # Get results for these students (only published results)
         results = Result.objects.filter(
             student_id__in=student_ids,
             department_id=department_id,
             level_id=level_id,
-            semester_id=semester_id
+            semester_id=semester_id,
+            status='approved',
+            hod_status = 'published'
         ).select_related('student', 'level', 'semester', 'department').prefetch_related('grade_score__course')
 
         # Group results by student
@@ -948,7 +951,8 @@ def lecturer_results_view(request):
             key = f"{result.student.id}_{result.semester.id}_{result.level.id}"
             if key not in student_results:
                 # Get only the grades for courses taught by this lecturer
-                lecturer_taught_grades = result.grade_score.filter(lecturer=profile)
+                # lecturer_taught_grades = result.grade_score.filter(lecturer=profile)
+                lecturer_taught_grades = result.grade_score.all()
 
                 student_results[key] = {
                     'result': result,
@@ -1021,7 +1025,9 @@ def student_results_view(request):
                 student=student_profile,
                 level_id=level_id,
                 semester_id=semester_id,
-                department=student_profile.department
+                department=student_profile.department,
+                status='approved',
+                hod_status='publish'
             )
 
             # Get all grades for this result
@@ -1394,4 +1400,100 @@ def delete_grade(request, grade_id):
     except Exception as e:
         messages.error(request, 'An error occurred while deleting the grade.')
         return redirect('grading')
+
+
+@login_required
+def toggle_hod_status(request, result_id):
+    """Toggle HOD status between published and draft"""
+    try:
+        result = Result.objects.get(id=result_id)
+
+        # Check if user is authorized (only HOD can toggle)
+        if request.user.position != 'hod':
+            messages.error(request, 'You are not authorized to perform this action.')
+            return redirect('view_all_results')
+
+        # Get HOD profile to check department
+        hod_profile = HodProfile.objects.get(user=request.user)
+        if result.department != hod_profile.department:
+            messages.error(request, 'You can only manage results in your department.')
+            return redirect('view_all_results')
+
+        # Toggle the HOD status
+        if result.hod_status == 'published':
+            result.hod_status = 'draft'
+            action = 'unpublished'
+            messages.success(request, f'Result for {result.student.full_name} has been unpublished successfully.')
+        else:
+            result.hod_status = 'published'
+            action = 'published'
+            messages.success(request, f'Result for {result.student.full_name} has been published successfully.')
+
+        result.save()
+
+        return redirect('view_all_results')
+
+    except Result.DoesNotExist:
+        messages.error(request, 'Result not found.')
+        return redirect('view_all_results')
+    except HodProfile.DoesNotExist:
+        messages.error(request, 'HOD profile not found.')
+        return redirect('view_all_results')
+    except Exception as e:
+        messages.error(request, 'An error occurred while updating the result status.')
+        return redirect('view_all_results')
+
+
+@login_required
+def publish_all_results(request):
+    """Publish all results for a specific level and semester"""
+    try:
+        # Check if user is authorized (only HOD can publish)
+        if request.user.position != 'hod':
+            messages.error(request, 'You are not authorized to perform this action.')
+            return redirect('view_all_results')
+
+        # Get HOD profile
+        hod_profile = HodProfile.objects.get(user=request.user)
+
+        # Get level and semester from query parameters
+        level_id = request.GET.get('level')
+        semester_id = request.GET.get('semester')
+
+        if not level_id or not semester_id:
+            messages.error(request, 'Level and semester are required.')
+            return redirect('view_all_results')
+
+        # Get all results for the specified level, semester, and HOD's department
+        results = Result.objects.filter(
+            level_id=level_id,
+            semester_id=semester_id,
+            department=hod_profile.department,
+            status='approved',
+            hod_status='draft'  # Only publish draft results
+        )
+
+        if not results.exists():
+            messages.info(request, 'No draft results found to publish for the selected level and semester.')
+            return redirect('view_all_results')
+
+        # Update all results to publish
+        updated_count = results.update(hod_status='publish')
+
+        # Get level and semester names for the message
+        level = Level.objects.get(id=level_id)
+        semester = Semester.objects.get(id=semester_id)
+
+        messages.success(request, f'Successfully published {updated_count} result(s) for {level.name} - {semester.name}.')
+        return redirect('view_all_results')
+
+    except HodProfile.DoesNotExist:
+        messages.error(request, 'HOD profile not found.')
+        return redirect('view_all_results')
+    except (Level.DoesNotExist, Semester.DoesNotExist):
+        messages.error(request, 'Invalid level or semester.')
+        return redirect('view_all_results')
+    except Exception as e:
+        messages.error(request, 'An error occurred while publishing results.')
+        return redirect('view_all_results')
 

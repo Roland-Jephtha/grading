@@ -82,9 +82,11 @@
                     <!-- Results Display -->
                     {% if show_results %}
                         {% if student_result %}
-                        <div class="card-body">
+
+
+                        <div class="card-body" id="printable-result-section">
                             <!-- Result Header -->
-                            <div class="row mb-4">
+<div class="row mb-4" id="printable-result-section">
                                 <div class="col-md-8">
                                     <h4 class="text-primary mb-2">
                                         <i class="fas fa-graduation-cap me-2"></i>
@@ -132,6 +134,7 @@
                                             <th>Grade</th>
                                             <th>Grade Point</th>
                                             <th>TCP</th>
+                                            <th>CGPA</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -154,6 +157,7 @@
                                             <th class="text-center">{{ student_result.tcu }}</th>
                                             <th colspan="3"></th>
                                             <th class="text-center text-primary fw-bold">{{ student_result.tgp|floatformat:2 }}</th>
+                                            <th class="text-center text-dark fw-bold">{{ student_result.gpa|floatformat:2 }}</th>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -201,14 +205,48 @@
                                 </div>
                             </div>
 
+                            <!-- Course Performance Pie Chart -->
+                            <div class="row mt-4">
+                                <div class="col-lg-6">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-warning text-white">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-chart-pie me-2"></i>Course Performance Pie Chart
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="coursePerformancePieChart" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-success text-white">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-trophy me-2"></i>Grade Distribution
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="gradeStats">
+                                                <!-- Grade statistics will be populated by JavaScript -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                 
+
                             <!-- Print Button -->
                             <div class="text-center mt-4">
-                                <button class="btn btn-outline-primary" onclick="window.print()">
+                                <button class="btn btn-outline-primary" onclick="printResultSection()">
                                     <i class="fas fa-print me-2"></i>
-                                    Print Result
+                                    Print This Section
                                 </button>
                             </div>
                         </div>
+
+
                         {% else %}
                         <!-- No Result Found -->
                         <div class="card-body text-center py-5">
@@ -249,34 +287,209 @@
     </div>
 </div>
 
-<style>
-@media print {
-    .btn, .card-header, nav, .navbar, .form-head, form {
-        display: none !important;
-    }
-    
-    .card {
-        border: none !important;
-        box-shadow: none !important;
-    }
-    
-    .table-bordered {
-        border: 2px solid #000 !important;
-    }
-    
-    .table-bordered th,
-    .table-bordered td {
-        border: 1px solid #000 !important;
-    }
-    
-    body {
-        font-size: 12px;
-    }
-    
-    .container-fluid {
-        padding: 0;
-    }
-}
-</style>
 
+<!-- Chart.js Pie Chart Script -->
+{% if student_result and student_result.grades_list %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var ctx = document.getElementById('coursePerformancePie').getContext('2d');
+        var courseLabels = [
+            {% for grade in student_result.grades_list %}'{{ grade.course.code }}'{% if not forloop.last %}, {% endif %}{% endfor %}
+        ];
+        var courseScores = [
+            {% for grade in student_result.grades_list %}{{ grade.score }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        ];
+        var backgroundColors = [
+            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#fd7e14', '#20c997', '#6f42c1'
+        ];
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: courseLabels,
+                datasets: [{
+                    data: courseScores,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Performance by Course (Score %)',
+                        font: { size: 16 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.parsed || 0;
+                                return label + ': ' + value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+
+<script>
+function printResultSection() {
+    var printContents = document.getElementById('printable-result-section').outerHTML;
+    var printWindow = window.open('', '', 'height=600,width=900');
+    printWindow.document.write('<html><head><title>Print Result Section</title>');
+    printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+    printWindow.document.write('<style>body{font-size:12px;} .table-bordered{border:2px solid #000!important;} .table-bordered th,.table-bordered td{border:1px solid #000!important;} .card{border:none!important;box-shadow:none!important;} </style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printContents);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
+</script>
+
+{% if show_results and student_result %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Course performance data from Django template
+    const courseData = [
+        {% for grade in student_result.grades_list %}
+        {
+            courseCode: '{{ grade.course.code }}',
+            courseTitle: '{{ grade.course.title }}',
+            score: {{ grade.score }},
+            grade: '{{ grade.grade }}',
+            gradePoint: {{ grade.grade_point|floatformat:2 }},
+            creditUnit: {{ grade.course.credit_unit }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    createCoursePerformancePieChart(courseData);
+    createGradeStatistics(courseData);
+});
+
+function createCoursePerformancePieChart(courseData) {
+    const ctx = document.getElementById('coursePerformancePieChart').getContext('2d');
+    // Prepare data for pie chart
+    const labels = courseData.map(course => course.courseCode);
+    const scores = courseData.map(course => course.score);
+    // Generate colors for each course
+    const backgroundColors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: scores,
+                backgroundColor: backgroundColors,
+                borderColor: '#fff',
+                borderWidth: 2,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            return data.labels.map((label, index) => {
+                                const course = courseData[index];
+                                return {
+                                    text: `${label} (${course.score}%)`,
+                                    fillStyle: data.datasets[0].backgroundColor[index],
+                                    strokeStyle: data.datasets[0].borderColor,
+                                    lineWidth: 2,
+                                    hidden: false,
+                                    index: index
+                                };
+                            });
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const index = context[0].dataIndex;
+                            const course = courseData[index];
+                            return `${course.courseCode} - ${course.courseTitle}`;
+                        },
+                        label: function(context) {
+                            const index = context.dataIndex;
+                            const course = courseData[index];
+                            return [
+                                `Score: ${course.score}%`,
+                                `Grade: ${course.grade}`,
+                                `Credit Unit: ${course.creditUnit}`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createGradeStatistics(courseData) {
+    const gradeStatsContainer = document.getElementById('gradeStats');
+    // Calculate grade distribution
+    const gradeOrder = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const gradeColors = {
+        'A': 'bg-success',
+        'B': 'bg-primary',
+        'C': 'bg-info',
+        'D': 'bg-warning',
+        'E': 'bg-secondary',
+        'F': 'bg-danger'
+    };
+    const gradeDistribution = {};
+    gradeOrder.forEach(g => gradeDistribution[g] = 0);
+    courseData.forEach(course => {
+        const grade = course.grade;
+        if (gradeDistribution.hasOwnProperty(grade)) {
+            gradeDistribution[grade]++;
+        }
+    });
+    // Generate HTML for grade statistics
+    let statsHTML = '<div class="row">';
+    let totalCourses = courseData.length;
+    gradeOrder.forEach(grade => {
+        const count = gradeDistribution[grade];
+        if (count > 0) {
+            const percentage = ((count / totalCourses) * 100).toFixed(2);
+            statsHTML += `
+                <div class="col-6 col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="mb-0">${grade}</h5>
+                            <p class="mb-0">${count} course${count > 1 ? 's' : ''} <span class='text-muted'>(${percentage}%)</span></p>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar ${gradeColors[grade]}" role="progressbar" style="width: ${percentage}%" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    statsHTML += '</div>';
+    gradeStatsContainer.innerHTML = statsHTML;
+}
+</script>
+{% endif %}
 {% endblock %}

@@ -751,6 +751,115 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 </style>
 
+
+
+
+
+
+
+
+
+
+<!-- Add anchor at the top of results for smooth scroll -->
+<a id="topOfResults"></a>
+
+<!-- Back to Top Button -->
+<button id="backToTopBtn" class="btn btn-primary back-to-top" title="Go to top">
+<i class="fas fa-arrow-up" style="margin-left:-0.2em"></i>
+</button>
+
+<style>
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: none;
+    z-index: 1000;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    font-size: 18px;
+}
+
+.back-to-top:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    background-color: #0056b3 !important;
+}
+
+.back-to-top.show {
+    display: block;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark theme support */
+[data-theme-version="dark"] .back-to-top {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+[data-theme-version="dark"] .back-to-top:hover {
+    background-color: #5a6268 !important;
+    border-color: #545b62 !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+        font-size: 16px;
+    }
+}
+</style>
+
+<script>
+// Back to Top Button Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const backToTopBtn = document.getElementById('backToTopBtn');
+
+    // Show/hide button based on scroll position
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+
+        // Show button when user scrolls down 30% of page
+        const showThreshold = documentHeight * 0.3;
+
+        if (scrollTop > showThreshold) {
+            backToTopBtn.classList.add('show');
+        } else {
+            backToTopBtn.classList.remove('show');
+        }
+    });
+
+    // Smooth scroll to top when button is clicked
+    backToTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+});
+</script>
+
 </body>
 
 </html>

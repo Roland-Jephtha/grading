@@ -70,7 +70,7 @@ class GradeAdmin(ModelAdmin):
     list_filter = ('status', 'course', 'student')
 
 class ResultAdmin(ModelAdmin):
-    list_display = ('student', 'matric_number', 'department', 'level', 'semester', 'gpa', 'tgp', 'tcu', 'remark', 'status')
+    list_display = ('student', 'matric_number', 'department', 'level', 'semester', 'gpa', 'remark', 'status', 'hod_status')
     search_fields = ('student__full_name', 'matric_number')
     list_filter = ('department', 'level', 'semester', 'status', 'remark')
 

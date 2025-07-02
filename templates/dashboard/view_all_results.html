@@ -15,6 +15,8 @@
                     <i class="fas fa-table me-2"></i>
                     View and manage all student results by level and semester
                 </p>
+
+
             </div>
         </div>
 
@@ -23,6 +25,8 @@
                 <div class="card">
                     <div class="card-header pb-0 border-0">
                         <h4 class="card-title mb-0">Results Overview</h4>
+                        
+
                     </div>
                     <br>
 
@@ -95,7 +99,18 @@
                                         for {{ selected_semester.name }}
                                     {% endif %}
                                 </h5>
+
+
                                 <span class="badge bg-primary fs-6">{{ results_count }} student{{ results_count|pluralize }}</span>
+                            
+                            <a href="#chartsSection" class="btn btn-outline-success btn-sm ms-3" title="See Charts">
+                                    <i class="fas fa-arrow-down"></i> See Performance Charts
+                                </a>
+
+                                
+                                <button onclick="publishAllResults()" class="btn btn-success btn-sm ms-3" title="Publish All Results">
+                                    <i class="fas fa-check"></i> Publish All Results
+                                </button>
                             </div>
                             
                             <div class="table-responsive">
@@ -113,6 +128,7 @@
                                             <th>GPA</th>
                                             <th>Remark</th>
                                             <th>Status</th>
+                                            <th>HOD Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -188,7 +204,14 @@
                                                     {% endif %}
                                                 </td>
                                                 <td class="text-center">
-                                                    {% if result.status == 'published' %}
+                                                    {% if result.status == 'approved' %}
+                                                        <span class="text-success fw-bold">Approved</span>
+                                                    {% else %}
+                                                        <span class="text-muted">Draft</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if result.hod_status == 'publish' %}
                                                         <span class="text-success fw-bold">Published</span>
                                                     {% else %}
                                                         <span class="text-muted">Draft</span>
@@ -203,7 +226,7 @@
                             </div>
 
                             <!-- Summary Statistics -->
-                            <div class="row mt-4">
+                            <div class="row mt-4" id="chartsSection">
                                 <div class="col-md-3">
                                     <div class="card bg-primary text-white">
                                         <div class="card-body text-center">
@@ -237,6 +260,31 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Charts Row --> 
+                            <div class="row px-3 pb-3" >
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-primary text-white">
+                                            <i class="fas fa-chart-bar me-2"></i>Student GPA Bar Chart
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="gpaBarChart" height="250"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-info text-white">
+                                            <i class="fas fa-chart-pie me-2"></i>GPA Distribution Pie Chart
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="gpaPieChart" height="120"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                              
+                            </div>
                         </div>
                         {% else %}
                         <!-- No Results for Selected Filters -->
@@ -253,10 +301,7 @@
                                 <i class="fas fa-check me-2"></i>
                                 Approve Grades
                             </a>
-                            <a href="{% url 'student_results_view' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-cog me-2"></i>
-                                Manage Results
-                            </a>
+                         
                         </div>
                         {% endif %}
                     {% else %}
@@ -281,6 +326,71 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if show_results and student_results %}
+    // Prepare data for charts
+    const labels = [];
+    const gpas = [];
+    {% for key, data in student_results.items %}
+        labels.push("{{ data.result.student.matric_number|escapejs }}");
+        gpas.push({{ data.result.gpa|default:0|floatformat:2 }});
+    {% endfor %}
+    // Destroy previous charts if they exist
+    if (window.gpaBarChartInstance) window.gpaBarChartInstance.destroy();
+    if (window.gpaPieChartInstance) window.gpaPieChartInstance.destroy();
+    // Bar Chart
+    const barCtx = document.getElementById('gpaBarChart').getContext('2d');
+    window.gpaBarChartInstance = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'GPA',
+                data: gpas,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'GPA by Matric Number' }
+            },
+            scales: {
+                y: { beginAtZero: true, max: 4 }
+            }
+        }
+    });
+    // Pie Chart
+    const pieCtx = document.getElementById('gpaPieChart').getContext('2d');
+    window.gpaPieChartInstance = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'GPA',
+                data: gpas,
+                backgroundColor: labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`),
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                title: { display: true, text: 'GPA Distribution by Matric Number' }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
 
 <style>
 .course-details {
@@ -330,5 +440,50 @@
     }
 }
 </style>
+
+<script>
+// Publish All Results Function
+function publishAllResults() {
+    // Detect current theme for SweetAlert styling
+    const isDarkTheme = document.body.classList.contains('dark') ||
+                       document.documentElement.getAttribute('data-theme') === 'dark' ||
+                       document.body.getAttribute('data-theme-version') === 'dark';
+
+    const themeConfig = {
+        background: isDarkTheme ? '#2a2d3a' : '#ffffff',
+        color: isDarkTheme ? '#ffffff' : '#333333',
+        customClass: {
+            popup: isDarkTheme ? 'dark-theme-popup' : 'light-theme-popup',
+            title: isDarkTheme ? 'dark-theme-title' : 'light-theme-title',
+            content: isDarkTheme ? 'dark-theme-content' : 'light-theme-content'
+        }
+    };
+
+    Swal.fire({
+        title: 'Publish All Results?',
+        text: 'Are you sure you want to publish all results for this level and semester? This action will make all results visible to students.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Publish All!',
+        cancelButtonText: 'Cancel',
+        background: themeConfig.background,
+        color: themeConfig.color,
+        customClass: themeConfig.customClass,
+        focusConfirm: false,
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Get current level and semester from the form
+            const level = document.querySelector('select[name="level"]').value;
+            const semester = document.querySelector('select[name="semester"]').value;
+
+            // Redirect to the bulk publish view
+            window.location.href = `/publish-all-results/?level=${level}&semester=${semester}`;
+        }
+    });
+}
+</script>
 
 {% endblock %}
