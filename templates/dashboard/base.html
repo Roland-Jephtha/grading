@@ -33,6 +33,12 @@
     <link href="{% static 'public/vendor/bootstrap-select/dist/css/bootstrap-select.min.css' %}" rel="stylesheet" type="text/css"/>
     <link href="{% static 'public/css/style.css' %}" rel="stylesheet" type="text/css"/>
 
+    <!-- Modern UI Design System -->
+    <link href="{% static 'css/modern-ui-system.css' %}" rel="stylesheet" type="text/css"/>
+
+    <!-- Google Fonts for Better Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
 <!-- TOASTR CSS (CDN) -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
 
@@ -378,7 +384,13 @@
 </style>
 
 
-
+    <div id="preloader">
+        <div class="sk-three-bounce">
+            <div class="sk-child sk-bounce1"></div>
+            <div class="sk-child sk-bounce2"></div>
+            <div class="sk-child sk-bounce3"></div>
+        </div>
+    </div>
 
 
 
@@ -434,6 +446,94 @@
                           </a>
                     </li>
 
+
+
+
+            <li class="nav-item dropdown notification_dropdown">
+                        <a class="nav-link  ai-icon" href="javascript:void(0)" role="button" data-bs-toggle="dropdown">
+                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M25.4707 19.1862L23.3333 15.9802V11.6667C23.3333 9.19135 22.35 6.81738 20.5997 5.06704C18.8493 3.3167 16.4753 2.33337 14 2.33337C11.5246 2.33337 9.15066 3.3167 7.40033 5.06704C5.64999 6.81738 4.66666 9.19135 4.66666 11.6667V15.9802L2.52932 19.1862C2.41256 19.362 2.34562 19.5661 2.33561 19.7769C2.32559 19.9877 2.37288 20.1972 2.47245 20.3833C2.57201 20.5693 2.72013 20.7249 2.90106 20.8335C3.08199 20.9421 3.28897 20.9997 3.49999 21H24.5C24.711 20.9997 24.918 20.9421 25.0989 20.8335C25.2798 20.7249 25.428 20.5693 25.5275 20.3833C25.6271 20.1972 25.6744 19.9877 25.6644 19.7769C25.6544 19.5661 25.5874 19.362 25.4707 19.1862Z" fill="#A5A5A5"/>
+                                <path d="M14 25.6666C15.0344 25.6675 16.0397 25.324 16.8572 24.6903C17.6748 24.0565 18.258 23.1686 18.515 22.1666H9.485C9.74197 23.1686 10.3252 24.0565 11.1428 24.6903C11.9603 25.324 12.9656 25.6675 14 25.6666Z" fill="#A5A5A5"/>
+                            </svg>
+                            
+                            <span class="badge light text-white bg-primary rounded-circle">4</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <div id="dlab_W_Notification1" class="widget-media dz-scroll p-3 height380">
+                                <ul class="timeline">
+                                    <li>
+                                        <div class="timeline-panel">
+                                            <div class="media me-2">
+                                                <img alt="image" width="50" src="public/images/avatar/1.jpg">
+                                            </div>
+                                            <div class="media-body">
+                                                <h6 class="mb-1">Dr sultads Send you Photo</h6>
+                                                <small class="d-block">29 July 2020 - 02:26 PM</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="timeline-panel">
+                                            <div class="media me-2 media-info">
+                                                KG
+                                            </div>
+                                            <div class="media-body">
+                                                <h6 class="mb-1">Resport created successfully</h6>
+                                                <small class="d-block">29 July 2020 - 02:26 PM</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="timeline-panel">
+                                            <div class="media me-2 media-success">
+                                                <i class="fa fa-home"></i>
+                                            </div>
+                                            <div class="media-body">
+                                                <h6 class="mb-1">Reminder : Treatment Time!</h6>
+                                                <small class="d-block">29 July 2020 - 02:26 PM</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                     <li>
+                                        <div class="timeline-panel">
+                                            <div class="media me-2">
+                                                <img alt="image" width="50" src="public/images/avatar/1.jpg">
+                                            </div>
+                                            <div class="media-body">
+                                                <h6 class="mb-1">Dr sultads Send you Photo</h6>
+                                                <small class="d-block">29 July 2020 - 02:26 PM</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="timeline-panel">
+                                            <div class="media me-2 media-danger">
+                                                KG
+                                            </div>
+                                            <div class="media-body">
+                                                <h6 class="mb-1">Resport created successfully</h6>
+                                                <small class="d-block">29 July 2020 - 02:26 PM</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="timeline-panel">
+                                            <div class="media me-2 media-primary">
+                                                <i class="fa fa-home"></i>
+                                            </div>
+                                            <div class="media-body">
+                                                <h6 class="mb-1">Reminder : Treatment Time!</h6>
+                                                <small class="d-block">29 July 2020 - 02:26 PM</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <a class="all-notification" href="javascript:void(0)">See all notifications <i class="ti-arrow-right"></i></a>
+                        </div>
+            </li>
+           
+     
 
            
 
@@ -767,6 +867,195 @@ document.addEventListener('DOMContentLoaded', function () {
 <button id="backToTopBtn" class="btn btn-primary back-to-top" title="Go to top">
 <i class="fas fa-arrow-up" style="margin-left:-0.2em"></i>
 </button>
+
+
+
+
+
+<!-- Custom Styles -->
+<style>
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.dashboard-time {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.stats-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.card-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.card-gradient-success {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.card-gradient-warning {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.card-gradient-info {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stats-label {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+}
+
+.stats-trend {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.stats-icon {
+    font-size: 3rem;
+    opacity: 0.2;
+}
+
+.action-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.action-btn {
+    display: block;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+    border: none;
+    text-align: left;
+}
+
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    color: white;
+}
+
+.action-btn.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.action-btn.btn-success {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.action-btn.btn-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.action-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.action-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.action-desc {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.calendar-card, .activity-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 1rem;
+}
+
+.activity-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.activity-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.calendar-controls .btn {
+    margin-left: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-title {
+        font-size: 2rem;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+    }
+    
+    .action-btn {
+        padding: 1rem;
+    }
+}
+</style>
 
 <style>
 .back-to-top {

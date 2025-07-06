@@ -943,7 +943,7 @@ def lecturer_results_view(request):
             level_id=level_id,
             semester_id=semester_id,
             status='approved',
-            hod_status = 'published'
+            hod_status = 'publish'
         ).select_related('student', 'level', 'semester', 'department').prefetch_related('grade_score__course')
 
         # Group results by student

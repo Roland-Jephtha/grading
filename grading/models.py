@@ -195,6 +195,8 @@ class Grade(models.Model):
             score = self.score
             if score >= 75:
                 self.grade = 'A'
+            elif score >= 70:
+                self.grade = 'AB'
             elif score >= 65:
                 self.grade = 'B'
             elif score >= 60:
@@ -281,3 +283,40 @@ class Result(models.Model):
             self.tcu = 0
         self.save()
 
+
+
+
+class Cummulative_Result(models.Model):
+    student = models.ForeignKey('StudentProfile', on_delete=models.CASCADE, null = True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
+    result = models.ManyToManyField('Result', blank= True)
+
+    gpa = models.FloatField(null=True)
+    tcu = models.IntegerField(null=True)
+    status = models.CharField(max_length=20, choices=[
+        ('draft', 'Draft'),
+        ('approved', 'Approved'),
+    ], default='draft', null=True)
+
+    
+    hod_status = models.CharField(max_length=20, choices=[
+        ('draft', 'Draft'),
+        ('publish', 'Publish'),
+    ], default='draft', null=True)
+
+
+    remark = models.CharField(max_length=20, choices=[
+        ('co', 'co'),
+        ('withdrawn', 'withdrawn'),
+        ('passed', 'passed'),
+        ('passed', 'Passed'),
+        ('failed', 'Failed'),
+    ], null=True)
+
+    created = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return f'{self.student.full_name}====={self.gpa}'
