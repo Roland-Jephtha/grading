@@ -1,0 +1,421 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Cumulative Results - {{ profile.department.name }}{% endblock %}
+
+{% block content %}
+<div class="content-body">
+    <div class="container-fluid">
+        
+
+        <!-- Page Header -->
+        {% comment %} <div class="form-head d-flex flex-wrap mb-sm-4 mb-3 align-items-center">
+            <div class="me-auto d-lg-block mb-3">
+                <h2 class="text-black mb-0 font-w700">Cumulative Results - {{ profile.department.name }}</h2>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    View cumulative GPA results (Second Semester Only)
+                </p>
+            </div>
+            <div class="d-flex align-items-center">
+                <a href="{% url 'view_all_results' %}" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="fas fa-table me-1"></i>
+                    Regular Results
+                </a>
+                {% if user.position == 'hod' %}
+                <a href="{% url 'test_cumulative_generation' %}" class="btn btn-info btn-sm">
+                    <i class="fas fa-calculator me-1"></i>
+                    Test Generate
+                </a>no
+                {% endif %}
+            </div>
+        </div> {% endcomment %}
+
+        <!-- Filters Card -->
+        <div class="card-modern mb-4">
+            <div class="card-header-modern">
+                <h2 class="card-title-modern">
+                    <i class="fas fa-filter text-primary"></i>
+                    Filter Results
+                </h2>
+            </div>
+            <div class="card-body-modern">
+                <form method="GET" class="grid grid-cols-auto gap-3">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Level</label>
+                        <select name="level" class="form-control-modern form-select-modern" required>
+                            <option value="">Select Level</option>
+                            {% for level in levels %}
+                                <option value="{{ level.id }}" {% if selected_level == level.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ level.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Semester</label>
+                        <select name="semester" class="form-control-modern form-select-modern" required>
+                            <option value="">Select Semester</option>
+                            {% for semester in semesters %}
+                                <option value="{{ semester.id }}" {% if selected_semester == semester.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ semester.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">&nbsp;</label>
+                        <button type="submit" class="btn-modern btn-primary-modern w-100">
+                            <i class="fas fa-search"></i>
+                            Search Results
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Cumulative Calculation Info -->
+        {% comment %} <div class="card-modern mb-4">
+            <div class="card-header-modern">
+                <h2 class="card-title-modern">
+                    <i class="fas fa-info-circle text-info"></i>
+                    Cumulative GPA Calculation
+                </h2>
+            </div>
+            <div class="card-body-modern">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-3 rounded" style="background: rgba(23, 162, 184, 0.1); border: 1px solid rgba(23, 162, 184, 0.3);">
+                        <h5 class="fw-bold text-info mb-2">First Year (ND1/HND1)</h5>
+                        <p class="small mb-0">Cumulative GPA = (1st Semester + 2nd Semester) ÷ 2</p>
+                    </div>
+                    <div class="p-3 rounded" style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3);">
+                        <h5 class="fw-bold text-success mb-2">Second Year (ND2/HND2)</h5>
+                        <p class="small mb-0">Cumulative GPA = (First Year CGPA + Second Year CGPA) ÷ 2</p>
+                    </div>
+                </div>
+                <div class="mt-3 p-3 rounded" style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3);">
+                    <p class="small mb-0 text-center">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <strong>Note:</strong> Cumulative results are only calculated for second semester students when both first and second semester results are available.
+                    </p>
+                </div>
+            </div>
+        </div> {% endcomment %}
+
+        {% if combined_results %}
+        <!-- Results Display -->
+        <div class="card-modern">
+            <div class="card-header-modern">
+                <h2 class="card-title-modern">
+                    <i class="fas fa-graduation-cap text-success"></i>
+                    Cumulative Results Overview
+                </h2>
+            </div>
+            <div class="card-body-modern">
+                <!-- Summary Statistics -->
+                <div class="grid grid-cols-4 gap-4 mb-4">
+                    <div class="stat-card stat-card-primary">
+                        <div class="stat-content">
+                            <h3 class="stat-number">{{ combined_results|length }}</h3>
+                            <p class="stat-label">Total Students</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-success">
+                        <div class="stat-content">
+                            <h3 class="stat-number">
+                                {% with passed_count=combined_results|length %}
+                                    {% for result in combined_results %}
+                                        {% if result.regular_result.remark == 'passed' %}{{ forloop.counter0|add:1 }}{% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            </h3>
+                            <p class="stat-label">Passed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-warning">
+                        <div class="stat-content">
+                            <h3 class="stat-number">
+                                {% with failed_count=0 %}
+                                    {% for result in combined_results %}
+                                        {% if result.regular_result.remark == 'failed' %}{{ forloop.counter0|add:1 }}{% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            </h3>
+                            <p class="stat-label">Failed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-info">
+                        <div class="stat-content">
+                            <h3 class="stat-number">
+                                {% if combined_results %}
+                                    {% with total_gpa=0 count=0 %}
+                                        {% for result in combined_results %}
+                                            {% if result.cumulative_result.cumulative_gpa %}
+                                                {{ result.cumulative_result.cumulative_gpa|floatformat:2 }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                {% else %}0.00{% endif %}
+                            </h3>
+                            <p class="stat-label">Avg CGPA</p>
+                        </div>
+                    </div>
+                </div>
+
+                        <!-- Bulk Publish Section -->
+        {% if combined_results %}
+        <div class="card-modern mt-4">
+            <div class="card-header-modern">
+                <h3 class="card-title-modern">
+                    <i class="fas fa-tasks text-primary"></i>
+                    Bulk Actions
+                </h3>
+            </div>
+            <div class="card-body-modern">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            <span class="text-muted">Publish all cumulative results for this level and semester</span>
+                        </div>
+
+                        <form method="post" action="{% url 'bulk_publish_cumulative_results' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="level" value="{{ selected_level }}">
+                            <input type="hidden" name="semester" value="{{ selected_semester }}">
+
+                            <button type="submit" class="btn btn-success btn-lg me-3"
+                                    onclick="return confirm('Are you sure you want to publish all cumulative results for this level and semester?')">
+                                <i class="fas fa-eye me-2"></i>
+                                Publish All Cumulative Results
+                            </button>
+                        </form>
+
+                        <form method="post" action="{% url 'bulk_unpublish_cumulative_results' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="level" value="{{ selected_level }}">
+                            <input type="hidden" name="semester" value="{{ selected_semester }}">
+
+                            <button type="submit" class="btn btn-warning btn-lg"
+                                    onclick="return confirm('Are you sure you want to unpublish all cumulative results for this level and semester?')">
+                                <i class="fas fa-eye-slash me-2"></i>
+                                Unpublish All
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="bg-light p-3 rounded">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-lightbulb text-warning me-1"></i>
+                                Note
+                            </h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Published results are visible to students</li>
+                                <li>Unpublished results are only visible to HODs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+                <!-- Results Table -->
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>S/N</th>
+                                <th>Student Name</th>
+                                <th>Matric Number</th>
+                                <th>Semester Results Used</th>
+                                <th>Yearly CGPA</th>
+                                <th>Overall CGPA</th>
+                                <th>Status</th>
+                                {% comment %} <th>Academic Year</th> {% endcomment %}
+                                <th>TCU</th>
+                                <th>Cumulative TCU</th>
+                                <th>Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in combined_results %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ result.student.full_name }}</div>
+                                    <small class="text-muted">{{ result.student.department.name }}</small>
+                                </td>
+                                <td>{{ result.student.matric_number }}</td>
+                                <td>
+                                    {% if result.cumulative_result %}
+                                        <div class="small">
+                                            {% comment %} <div class="fw-bold text-info mb-2">
+                                                {{ result.cumulative_result.academic_year }} Academic Year:</div> {% endcomment %}
+                                            {% for semester_result in result.cumulative_result.result.all %}
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="text-muted">{{ semester_result.semester.name }}:</span>
+                                                    <span class="badge badge-sm {% if semester_result.gpa >= 3.5 %}badge-success{% elif semester_result.gpa >= 2.5 %}badge-warning{% else %}badge-danger{% endif %}">
+                                                        {{ semester_result.gpa|floatformat:3 }}
+                                                    </span>
+                                                </div>
+                                            {% endfor %}
+                                            {% if result.cumulative_result.result.count == 2 %}
+                                                <hr class="my-1">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    {% comment %} <span class="fw-bold text-primary">{{ result.cumulative_result.academic_year }} CGPA:</span> {% endcomment %}
+                                                    <span class="fw-bold text-primary"> CGPA:</span>
+                                                    <span class="badge badge-primary">{{ result.cumulative_result.yearly_cumulative_gpa|floatformat:3 }}</span>
+                                                </div>
+                                                <div class="text-center">
+                                                    <small class="text-muted">
+                                                        {% with calc=result.cumulative_result.get_calculation_details %}
+                                                            ({{ calc.first_semester.gpa|floatformat:3 }} + {{ calc.second_semester.gpa|floatformat:3 }}) ÷ 2
+                                                        {% endwith %}
+                                                    </small>
+                                                </div>
+                                            {% else %}
+                                                <div class="text-warning small">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                    Incomplete - Missing semester result
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if result.cumulative_result %}
+                                        <span class="badge-modern {% if result.cumulative_result.yearly_cumulative_gpa >= 3.5 %}badge-success-modern{% elif result.cumulative_result.yearly_cumulative_gpa >= 2.5 %}badge-warning-modern{% else %}badge-danger-modern{% endif %}">
+                                            {{ result.cumulative_result.yearly_cumulative_gpa|floatformat:3 }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if result.cumulative_result %}
+                                        <span class="badge-modern {% if result.cumulative_result.overall_cumulative_gpa >= 3.5 %}badge-success-modern{% elif result.cumulative_result.overall_cumulative_gpa >= 2.5 %}badge-warning-modern{% else %}badge-danger-modern{% endif %}">
+                                            {{ result.cumulative_result.overall_cumulative_gpa|floatformat:3 }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Status Column -->
+                                <td>
+                                    {% if result.cumulative_result %}
+                                        <div class="d-flex flex-column gap-1">
+                                            <span class="badge badge-sm {% if result.cumulative_result.status == 'approved' %}badge-success{% else %}badge-secondary{% endif %}">
+                                                Admin: {{ result.cumulative_result.status|title }}
+                                            </span>
+                                            <span class="badge badge-sm {% if result.cumulative_result.hod_status == 'published' %}badge-primary{% else %}badge-warning{% endif %}">
+                                                HOD: {{ result.cumulative_result.hod_status|title }}
+                                            </span>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+
+
+                                {% comment %} <td>
+                                    {% if result.cumulative_result %}
+                                        <span class="badge-modern badge-info-modern">
+                                            {{ result.cumulative_result.academic_year }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td> {% endcomment %}
+                                <td>{{ result.regular_result.tcu|default:"0" }}</td>
+                                <td>
+                                    {% if result.cumulative_result %}
+                                        {{ result.cumulative_result.cumulative_tcu|default:"0" }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if result.cumulative_result %}
+                                        {% if result.cumulative_result.remark == 'distinction' %}
+                                            <span class="badge-modern badge-success-modern">
+                                                <i class="fas fa-star me-1"></i>Distinction
+                                            </span>
+                                            <div class="small text-muted">3.50 - 4.00</div>
+                                        {% elif result.cumulative_result.remark == 'upper_credit' %}
+                                            <span class="badge-modern badge-info-modern">
+                                                <i class="fas fa-thumbs-up me-1"></i>Upper Credit
+                                            </span>
+                                            <div class="small text-muted">3.00 - 3.49</div>
+                                        {% elif result.cumulative_result.remark == 'lower_credit' %}
+                                            <span class="badge-modern badge-warning-modern">
+                                                <i class="fas fa-check me-1"></i>Lower Credit
+                                            </span>
+                                            <div class="small text-muted">2.50 - 2.99</div>
+                                        {% elif result.cumulative_result.remark == 'pass' %}
+                                            <span class="badge-modern badge-secondary-modern">
+                                                <i class="fas fa-check-circle me-1"></i>Pass
+                                            </span>
+                                            <div class="small text-muted">2.00 - 2.49</div>
+                                        {% else %}
+                                            <span class="badge-modern badge-danger-modern">
+                                                <i class="fas fa-times me-1"></i>Fail
+                                            </span>
+                                            <div class="small text-muted">Below 2.00</div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+
+        {% elif selected_level and selected_semester %}
+        <!-- No Results Found -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-search text-muted" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h4 class="text-muted">No Cumulative Results Found</h4>
+                <p class="text-muted">No cumulative results found for the selected level and semester.</p>
+
+                <!-- Debug Information -->
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="text-muted">Debug Information:</h6>
+                    <p class="small text-muted mb-1">Selected Level ID: {{ selected_level }}</p>
+                    <p class="small text-muted mb-1">Selected Semester ID: {{ selected_semester }}</p>
+                    <p class="small text-muted mb-1">Regular Results Count: {{ regular_results.count }}</p>
+                    <p class="small text-muted mb-1">Cumulative Results Count: {{ cumulative_results.count }}</p>
+                    <p class="small text-muted mb-0">
+                        <strong>Note:</strong> Cumulative results are only available for second semester students.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Default State -->
+        <div class="card-modern">
+            <div class="card-body-modern text-center py-5">
+                <i class="fas fa-filter text-muted" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h4 class="text-muted">Select Filters</h4>
+                <p class="text-muted">Please select a level and semester to view cumulative results.</p>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

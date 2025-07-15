@@ -39,8 +39,24 @@ urlpatterns = [
     # Bulk Publish Results URL
     path('publish-all-results/', publish_all_results, name='publish_all_results'),
 
+    # Cumulative Results URL
+    path('cumulative-results/', cumulative_results_view, name='cumulative_results'),
 
+    # Student Cumulative Results URL
+    path('my-cumulative-results/', student_cumulative_results, name='student_cumulative_results'),
 
+    # Test Cumulative Generation URL
+    path('test-cumulative/', test_cumulative_generation, name='test_cumulative_generation'),
+
+    # Debug Cumulative Data URL
+    path('debug-cumulative/', debug_cumulative_data, name='debug_cumulative_data'),
+
+    # Toggle Cumulative Result Status URL
+    path('toggle-cumulative-status/<int:result_id>/', toggle_cumulative_result_status, name='toggle_cumulative_result_status'),
+
+    # Bulk Publish/Unpublish Cumulative Results URLs
+    path('bulk-publish-cumulative/', bulk_publish_cumulative_results, name='bulk_publish_cumulative_results'),
+    path('bulk-unpublish-cumulative/', bulk_unpublish_cumulative_results, name='bulk_unpublish_cumulative_results'),
 
     # path('submit/', views.submit, name='submit'),
 ]

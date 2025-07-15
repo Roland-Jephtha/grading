@@ -447,7 +447,7 @@
                     </li>
 
 
-
+{% comment %} 
 
             <li class="nav-item dropdown notification_dropdown">
                         <a class="nav-link  ai-icon" href="javascript:void(0)" role="button" data-bs-toggle="dropdown">
@@ -535,7 +535,7 @@
            
      
 
-           
+            {% endcomment %}
 
 
                     <li class="nav-item dropdown header-profile">
@@ -610,6 +610,11 @@
     <span class="nav-text">My Students Results</span>
 </a></li>
 
+<li><a href="{% url 'cumulative_results' %}" class="ai-icon" aria-expanded="false">
+<i class="fas fa-chart-area text-info"></i>  <!-- Cumulative results icon -->
+    <span class="nav-text">Cumulative Results</span>
+</a></li>
+
 
 
 
@@ -635,6 +640,11 @@
     <span class="nav-text">View Students Results</span>
 </a></li>
 
+<li><a href="{% url 'cumulative_results' %}" class="ai-icon" aria-expanded="false">
+<i class="fas fa-chart-area text-info"></i>  <!-- Cumulative results icon -->
+    <span class="nav-text">Cumulative Results</span>
+</a></li>
+
 
 
 
@@ -648,6 +658,11 @@
 <li><a href="{% url 'student_performance' %}" class="ai-icon" aria-expanded="false">
     <i class="fas fa-chart-line text-primary"></i> <!-- Performance analytics icon -->
     <span class="nav-text">My Performance</span>
+</a></li>
+
+<li><a href="{% url 'student_cumulative_results' %}" class="ai-icon" aria-expanded="false">
+    <i class="fas fa-chart-area text-warning"></i> <!-- Cumulative results icon -->
+    <span class="nav-text">My Cumulative Results</span>
 </a></li>
 
 

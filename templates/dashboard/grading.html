@@ -255,9 +255,21 @@ function submitGradesToDepartment() {
     const semester = document.getElementById("semesterFilter").value;
 
     if (!department || !level || !semester) {
-        alert("Please select Department, Level, and Semester before submitting.");
+        // Use SweetAlert for better UX
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please select Department, Level, and Semester before submitting.',
+            confirmButtonColor: '#3085d6'
+        });
         return;
     }
+
+    // Show loading state
+    const submitBtn = document.querySelector('button[onclick="submitGradesToDepartment()"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Submitting...';
+    submitBtn.disabled = true;
 
     fetch(`/submit-grades/`, {
         method: "POST",
@@ -273,12 +285,45 @@ function submitGradesToDepartment() {
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message);
-        location.reload();
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+
+        if (data.status === 'success') {
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message,
+                confirmButtonColor: '#28a745',
+                timer: 2000,
+                timerProgressBar: true
+            }).then(() => {
+                // Reload the page to show status changes from draft to submitted
+                location.reload();
+            });
+        } else {
+            // Show error message
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'An error occurred while submitting grades.',
+                confirmButtonColor: '#dc3545'
+            });
+        }
     })
     .catch(error => {
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+
         console.error("Error submitting grades:", error);
-        alert("An error occurred while submitting grades.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: 'An error occurred while submitting grades. Please try again.',
+            confirmButtonColor: '#dc3545'
+        });
     });
 }
 </script>

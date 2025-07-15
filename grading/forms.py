@@ -49,6 +49,8 @@ class GradeForm(forms.ModelForm):
         score = instance.score
         if score >= 75:
             instance.grade = 'A'
+        elif score >= 70:
+            instance.grade = 'AB'
         elif score >= 65:
             instance.grade = 'B'
         elif score >= 60:
@@ -56,6 +58,8 @@ class GradeForm(forms.ModelForm):
         elif score >= 55:
             instance.grade = 'C'
         elif score >= 50:
+            instance.grade = 'CD'
+        elif score >= 45:
             instance.grade = 'D'
         elif score >= 40:
             instance.grade = 'E'

@@ -161,7 +161,7 @@ class HodProfileAdmin(ModelAdmin):
 
 
 class Cum_ResultAdmin(ModelAdmin):
-    list_display = ('student',  'department', 'level', 'semester', 'gpa')
+    list_display = ('student',  'department', 'level', 'semester',  'cumulative_tcu', 'cumulative_gpa', 'remark' )
     search_fields = ('student__full_name', 'student__matric_number')
     list_filter = ('department', 'level', 'semester')
 

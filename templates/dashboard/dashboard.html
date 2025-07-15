@@ -20,7 +20,7 @@
                         {% elif user.position == 'lecturer' %}
                             <div class="header-badge">
                                 <i class="fas fa-chalkboard-teacher"></i>
-                                <span>Faculty Portal</span>
+                                <span>Lecturer Portal</span>
                             </div>
                             <h1 class="header-title">Lecturer Dashboard</h1>
                             <p class="header-subtitle">{{ profile.department.name }} Department • Manage courses and assessments</p>
@@ -29,7 +29,7 @@
                                 <i class="fas fa-crown"></i>
                                 <span>Department Head</span>
                             </div>
-                            <h1 class="header-title">Administrative Dashboard</h1>
+                            <h1 class="header-title">Head of Department Dashboard</h1>
                             <p class="header-subtitle">{{ profile.department.name }} Department • Oversee academic operations</p>
                         {% else %}
                             <div class="header-badge">
@@ -102,7 +102,7 @@
                         </div>
                     </div>
                     <div class="stat-content">
-                        <h3 class="stat-number">{{ student_stats.current_gpa|default:"0.00"|floatformat:2 }}</h3>
+                        <h3 class="stat-number">{{ student_stats.current_gpa|default:"0.000"|floatformat:3 }}</h3>
                         <p class="stat-label">Current GPA</p>
                         <div class="stat-progress">
                             <div class="progress-bar" style="width: {% if student_stats.current_gpa >= 3.5 %}90{% elif student_stats.current_gpa >= 3.0 %}75{% elif student_stats.current_gpa >= 2.5 %}60{% elif student_stats.current_gpa >= 2.0 %}45{% elif student_stats.current_gpa >= 1.0 %}30{% else %}15{% endif %}%"></div>
@@ -201,6 +201,22 @@
                             </div>
                             <h3 class="action-title-modern">Profile Management</h3>
                             <p class="action-description-modern">Update personal information, change password, and manage account settings</p>
+                            <div class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'student_cumulative_results' %}" class="action-card-modern warning">
+                        <div class="action-background">
+                            <div class="action-pattern"></div>
+                        </div>
+                        <div class="action-content-modern">
+                            <div class="action-icon-modern">
+                                <i class="fas fa-chart-area"></i>
+                            </div>
+                            <h3 class="action-title-modern">Cumulative Results</h3>
+                            <p class="action-description-modern">Track your cumulative GPA, academic progress, and classification across all years</p>
                             <div class="action-arrow">
                                 <i class="fas fa-arrow-right"></i>
                             </div>
@@ -466,6 +482,22 @@
                         </div>
                     </a>
 
+                    <a href="{% url 'cumulative_results' %}" class="action-card-modern warning">
+                        <div class="action-background">
+                            <div class="action-pattern"></div>
+                        </div>
+                        <div class="action-content-modern">
+                            <div class="action-icon-modern">
+                                <i class="fas fa-chart-area"></i>
+                            </div>
+                            <h3 class="action-title-modern">Cumulative Results</h3>
+                            <p class="action-description-modern">View cumulative GPA calculations across semesters and academic years</p>
+                            <div class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
                     <a href="{% url 'update_profile' %}" class="action-card-modern info">
                         <div class="action-background">
                             <div class="action-pattern"></div>
@@ -482,6 +514,8 @@
                         </div>
                     </a>
                 </div>
+
+        
             </div>
 
         {% else %}
@@ -531,7 +565,7 @@
 
         <!-- Enhanced Calendar Section -->
         <div class="row g-4">
-            <div class="col-xl-8">
+            <div class="col-xl-12">
                 <div class="calendar-card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">
@@ -554,38 +588,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-4">
-                <div class="activity-card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-bell me-2 text-primary"></i>Recent Activity
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="activity-item">
-                            <div class="activity-dot bg-primary"></div>
-                            <div class="activity-content">
-                                <div class="activity-title">System Update</div>
-                                <div class="activity-time">2 hours ago</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-dot bg-success"></div>
-                            <div class="activity-content">
-                                <div class="activity-title">Grades Submitted</div>
-                                <div class="activity-time">1 day ago</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-dot bg-warning"></div>
-                            <div class="activity-content">
-                                <div class="activity-title">Pending Approval</div>
-                                <div class="activity-time">3 days ago</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+       
         </div>
 
     </div>

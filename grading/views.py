@@ -6,6 +6,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from .forms import GradeForm, StudentProfileForm, LecturerProfileForm, HodProfileForm, UserUpdateForm
 from django.db import models
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 
@@ -76,7 +78,7 @@ def dashboard(request):
 
             student_stats = {
                 'total_courses': total_courses,
-                'current_gpa': round(current_gpa, 2),
+                'current_gpa': round(current_gpa, 3),
                 'completed_semesters': completed_semesters,
                 'credit_units': total_credit_units,
             }
@@ -91,7 +93,7 @@ def dashboard(request):
                 'profile': None,
                 'student_stats': {
                     'total_courses': 0,
-                    'current_gpa': 0.00,
+                    'current_gpa': 0.000,
                     'completed_semesters': 0,
                     'credit_units': 0,
                 }
@@ -381,11 +383,72 @@ def submit_grades(request):
             status='draft'
         ).update(status='submitted')
 
-        messages.success(request, 'Grade Submitted Successfully')
+        # Send email asynchronously (don't block the response)
+        try:
+            from threading import Thread
 
-        return JsonResponse({"message": f"{updated} grades submitted to department."})
+            def send_notification_email():
+                try:
+                    # Get the department object first
+                    dept_obj = Department.objects.get(name=department)
+                    hod = HodProfile.objects.get(department=dept_obj)
 
-    return JsonResponse({"message": "Invalid request"}, status=400)
+                    # Validate email address
+                    if hod.user.email and '@' in hod.user.email:
+                        # Prepare email content
+                        subject = f"Grade Submission Alert - {department} Department"
+                        message = f"""Dear {hod.full_name},
+
+A lecturer ({lecturer.full_name}) has submitted {updated} grade(s) for review.
+
+Details:
+- Department: {department}
+- Level: {level}
+- Semester: {semester}
+- Lecturer: {lecturer.full_name}
+- Grades Submitted: {updated}
+
+Please log in to the system to review and approve these grades.
+
+Best regards,
+PTI Grading System
+"""
+
+                        # Get email settings
+                        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@pti.edu.ng')
+                        recipient_list = [hod.user.email]
+
+                        # Send email
+                        send_mail(
+                            subject=subject,
+                            message=message,
+                            from_email=from_email,
+                            recipient_list=recipient_list,
+                            fail_silently=True,  # Don't fail if email fails
+                        )
+                        print(f"Email sent successfully to {hod.user.email}")
+                    else:
+                        print(f"Invalid email address for HOD: {hod.user.email}")
+
+                except Exception as e:
+                    print(f"Error in email sending process: {str(e)}")
+
+            # Start email sending in background thread (non-blocking)
+            email_thread = Thread(target=send_notification_email)
+            email_thread.daemon = True
+            email_thread.start()
+
+        except Exception as e:
+            print(f"Error starting email thread: {str(e)}")
+
+        # Return immediate success response
+        return JsonResponse({
+            "message": f"{updated} grades submitted to department successfully!",
+            "updated_count": updated,
+            "status": "success"
+        })
+
+    return JsonResponse({"message": "Invalid request method.", "status": "error"}, status=405)
 
 
 
@@ -1352,7 +1415,558 @@ def update_profile(request):
         messages.error(request, 'Invalid user type.')
         return redirect('dashboard')
 
+    # Return the rendered template with the context
     return render(request, 'dashboard/update_profile.html', context)
+
+
+
+
+@login_required
+def cumulative_results_view(request):
+    """View cumulative results with regular results"""
+    if request.user.position not in ['hod', 'lecturer', 'student']:
+        messages.error(request, 'You are not authorized to view this page.')
+        return redirect('dashboard')
+
+    # Get user profile
+    if request.user.position == 'hod':
+        profile = HodProfile.objects.get(user=request.user)
+    else:
+        profile = LecturerProfile.objects.get(user=request.user)
+
+    # Get filter parameters
+    level_id = request.GET.get('level')
+    semester_id = request.GET.get('semester')
+
+    # Get available options
+    levels = Level.objects.all()
+    semesters = Semester.objects.all()
+
+    # Default to second semester if no semester is selected (flexible patterns)
+    if not semester_id:
+        second_semester = semesters.filter(name__icontains='second').first()
+        if not second_semester:
+            second_semester = semesters.filter(name__icontains='2nd').first()
+        if not second_semester:
+            second_semester = semesters.filter(name__icontains='2ND').first()
+        if not second_semester:
+            second_semester = semesters.filter(name__regex=r'.*2.*').first()
+        if second_semester:
+            semester_id = str(second_semester.id)
+
+    regular_results = []
+    cumulative_results = []
+
+    if level_id and semester_id:
+        print(f"🔍 DEBUG: Searching cumulative results...")
+        print(f"   Department: {profile.department.name}")
+        print(f"   Level ID: {level_id}")
+        print(f"   Semester ID: {semester_id}")
+
+        # Get regular results
+        regular_results = Result.objects.filter(
+            department=profile.department,
+            level_id=level_id,
+            semester_id=semester_id,
+            status='approved'
+        ).select_related('student', 'level', 'semester').prefetch_related('grade_score__course')
+
+        print(f"   Regular results found: {regular_results.count()}")
+
+        # Get cumulative results (HOD can only see admin-approved results)
+        cumulative_results = Cummulative_Result.objects.filter(
+            department=profile.department,
+            level_id=level_id,
+            semester_id=semester_id,
+            status='approved'  # Only admin-approved cumulative results
+        ).select_related('student', 'level', 'semester').prefetch_related('result')
+
+        print(f"   Cumulative results found: {cumulative_results.count()}")
+
+        # Debug: Show all cumulative results in database
+        all_cumulative = Cummulative_Result.objects.filter(
+            department=profile.department
+        ).values('student__full_name', 'level__name', 'semester__name', 'status', 'yearly_cumulative_gpa')
+        print(f"   All cumulative results in department:")
+        for result in all_cumulative:
+            print(f"     - {result['student__full_name']}: {result['level__name']} {result['semester__name']} (Status: {result['status']}) CGPA: {result['yearly_cumulative_gpa']}")
+
+        if cumulative_results.count() == 0:
+            print(f"   ❌ No cumulative results found! Checking why...")
+            # Check if any cumulative results exist at all
+            total_cumulative = Cummulative_Result.objects.count()
+            print(f"   Total cumulative results in system: {total_cumulative}")
+
+            # Check if there are any for this department
+            dept_cumulative = Cummulative_Result.objects.filter(department=profile.department).count()
+            print(f"   Cumulative results for {profile.department.name}: {dept_cumulative}")
+
+            # Check if there are any for this level
+            level_cumulative = Cummulative_Result.objects.filter(level_id=level_id).count()
+            print(f"   Cumulative results for level {level_id}: {level_cumulative}")
+
+            # Check if there are any for this semester
+            semester_cumulative = Cummulative_Result.objects.filter(semester_id=semester_id).count()
+            print(f"   Cumulative results for semester {semester_id}: {semester_cumulative}")
+
+        # Create combined results data
+        combined_results = []
+        for regular in regular_results:
+            cumulative = cumulative_results.filter(student=regular.student).first()
+            combined_results.append({
+                'student': regular.student,
+                'regular_result': regular,
+                'cumulative_result': cumulative,
+                'level': regular.level,
+                'semester': regular.semester,
+            })
+
+        print(f"   Combined results created: {len(combined_results)}")
+
+        # If no results, let's check if we need to generate cumulative results
+        if len(combined_results) == 0 and regular_results.count() > 0:
+            print(f"   ⚠️  Found regular results but no cumulative results!")
+            print(f"   Attempting to generate cumulative results...")
+
+            # Try to generate cumulative results for the regular results found
+            generated_count = 0
+            for regular_result in regular_results:
+                # Check if this is a second semester result
+                semester_name = regular_result.semester.name.lower()
+                if 'second' in semester_name or '2nd' in semester_name or '2' in semester_name:
+                    print(f"   🔍 Processing second semester result for {regular_result.student.full_name}")
+                    cumulative = Cummulative_Result.create_cumulative_result(regular_result)
+                    if cumulative:
+                        generated_count += 1
+                        print(f"   ✅ Generated cumulative result for {regular_result.student.full_name}")
+                    else:
+                        print(f"   ❌ Failed to generate cumulative result for {regular_result.student.full_name}")
+                else:
+                    print(f"   ⏭️  Skipping first semester result for {regular_result.student.full_name}")
+
+            print(f"   Generated {generated_count} new cumulative results")
+
+            # Re-query cumulative results after generation
+            if generated_count > 0:
+                cumulative_results = Cummulative_Result.objects.filter(
+                    department=profile.department,
+                    level_id=level_id,
+                    semester_id=semester_id,
+                    status='approved'
+                ).select_related('student', 'level', 'semester').prefetch_related('result')
+
+                print(f"   Re-queried cumulative results: {cumulative_results.count()}")
+
+                # Recreate combined results
+                combined_results = []
+                for regular in regular_results:
+                    cumulative = cumulative_results.filter(student=regular.student).first()
+                    combined_results.append({
+                        'student': regular.student,
+                        'regular_result': regular,
+                        'cumulative_result': cumulative,
+                        'level': regular.level,
+                        'semester': regular.semester,
+                    })
+
+                print(f"   Final combined results count: {len(combined_results)}")
+
+    context = {
+        'profile': profile,
+        'levels': levels,
+        'semesters': semesters,
+        'selected_level': level_id,
+        'selected_semester': semester_id,
+        'combined_results': combined_results if level_id and semester_id else [],
+        'regular_results': regular_results,
+        'cumulative_results': cumulative_results,
+    }
+
+    return render(request, 'dashboard/cumulative_results.html', context)
+
+
+@login_required
+def student_cumulative_results(request):
+    """Student view for their own cumulative results - With optional filtering"""
+    if request.user.position != 'student':
+        messages.error(request, 'You are not authorized to view this page.')
+        return redirect('dashboard')
+
+    # Get student profile
+    try:
+        profile = StudentProfile.objects.get(user=request.user)
+    except StudentProfile.DoesNotExist:
+        messages.error(request, 'Student profile not found.')
+        return redirect('dashboard')
+
+    # Get filter parameters
+    level_id = request.GET.get('level')
+    semester_id = request.GET.get('semester')
+
+    # Get available options for this student
+    student_levels = Level.objects.filter(
+        result__student=profile
+    ).distinct().order_by('name')
+
+    student_semesters = Semester.objects.filter(
+        result__student=profile
+    ).distinct().order_by('name')
+
+    # Initialize empty results
+    cumulative_results = Cummulative_Result.objects.none()
+    regular_results = Result.objects.none()
+
+    # Only show results if filters are applied (like HOD side)
+    if level_id and semester_id:
+        # Get student's cumulative results with filters (students can only see HOD-published results)
+        cumulative_results = Cummulative_Result.objects.filter(
+            student=profile,
+            status='approved',  # Admin approved
+            hod_status='published',  # AND HOD published
+            level_id=level_id,
+            semester_id=semester_id
+        ).select_related('level', 'semester').prefetch_related('result').order_by('level__name', 'semester__name')
+
+        # Get regular results for comparison with filters
+        regular_results = Result.objects.filter(
+            student=profile,
+            status='approved',
+            level_id=level_id,
+            semester_id=semester_id
+        ).select_related('level', 'semester').prefetch_related('grade_score__course').order_by('level__name', 'semester__name')
+
+    # Create combined results data
+    combined_results = []
+    for cumulative in cumulative_results:
+        regular = regular_results.filter(
+            level=cumulative.level,
+            semester=cumulative.semester
+        ).first()
+
+        combined_results.append({
+            'cumulative_result': cumulative,
+            'regular_result': regular,
+            'level': cumulative.level,
+            'semester': cumulative.semester,
+        })
+
+    # Calculate overall statistics from the latest cumulative result
+    if cumulative_results:
+        # Get the most recent cumulative result (highest level/semester)
+        latest_result = cumulative_results.last()  # Last in ordered list
+        overall_cgpa = latest_result.overall_cumulative_gpa if latest_result and latest_result.overall_cumulative_gpa else 0.0
+        total_tcu = latest_result.cumulative_tcu if latest_result else 0
+        current_year = latest_result.academic_year if latest_result else 'N/A'
+        current_remark = latest_result.get_remark_display_with_range() if latest_result else 'N/A'
+    else:
+        overall_cgpa = 0.0
+        total_tcu = 0
+        current_year = 'N/A'
+        current_remark = 'N/A'
+
+    # Get academic progression summary
+    academic_years = {}
+    for result in cumulative_results:
+        year = result.academic_year
+        if year not in academic_years:
+            academic_years[year] = {
+                'year': year,
+                'cgpa': result.yearly_cumulative_gpa,
+                'semesters': []
+            }
+        academic_years[year]['semesters'].append({
+            'semester': result.semester.name,
+            'cgpa': result.yearly_cumulative_gpa
+        })
+
+    context = {
+        'profile': profile,
+        'student_levels': student_levels,
+        'student_semesters': student_semesters,
+        'selected_level': level_id,
+        'selected_semester': semester_id,
+        'combined_results': combined_results,
+        'cumulative_results': cumulative_results,
+        'regular_results': regular_results,
+        'overall_cgpa': overall_cgpa,
+        'total_tcu': total_tcu,
+        'current_year': current_year,
+        'current_remark': current_remark,
+        'academic_years': academic_years,
+        'total_results': cumulative_results.count(),
+    }
+
+    return render(request, 'dashboard/student_cumulative_results.html', context)
+
+
+@login_required
+def toggle_cumulative_result_status(request, result_id):
+    """Toggle cumulative result status between draft and published (HOD only)"""
+    if request.user.position != 'hod':
+        messages.error(request, 'You are not authorized to perform this action.')
+        return redirect('dashboard')
+
+    try:
+        profile = HodProfile.objects.get(user=request.user)
+
+        # Get the cumulative result (must be admin-approved and in HOD's department)
+        cumulative_result = Cummulative_Result.objects.get(
+            id=result_id,
+            department=profile.department,
+            status='approved'  # Only admin-approved results can be published by HOD
+        )
+
+        # Toggle the HOD status
+        if cumulative_result.hod_status == 'published':
+            cumulative_result.hod_status = 'draft'
+            messages.success(request, f'Cumulative result for {cumulative_result.student.full_name} has been unpublished successfully.')
+        else:
+            cumulative_result.hod_status = 'published'
+            messages.success(request, f'Cumulative result for {cumulative_result.student.full_name} has been published successfully.')
+
+        cumulative_result.save()
+
+    except Cummulative_Result.DoesNotExist:
+        messages.error(request, 'Cumulative result not found or not authorized.')
+    except HodProfile.DoesNotExist:
+        messages.error(request, 'HOD profile not found.')
+    except Exception as e:
+        messages.error(request, 'An error occurred while updating the cumulative result status.')
+
+    return redirect('cumulative_results')
+
+
+@login_required
+def bulk_publish_cumulative_results(request):
+    """Bulk publish cumulative results for a specific level and semester"""
+    if request.user.position != 'hod':
+        messages.error(request, 'You are not authorized to perform this action.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        try:
+            profile = HodProfile.objects.get(user=request.user)
+            level_id = request.POST.get('level')
+            semester_id = request.POST.get('semester')
+
+            if not level_id or not semester_id:
+                messages.error(request, 'Level and semester are required.')
+                return redirect('cumulative_results')
+
+            # Get all admin-approved cumulative results for this level and semester
+            cumulative_results = Cummulative_Result.objects.filter(
+                department=profile.department,
+                level_id=level_id,
+                semester_id=semester_id,
+                status='approved'  # Only admin-approved results
+            )
+
+            # Bulk update to published
+            updated_count = cumulative_results.update(hod_status='published')
+
+            if updated_count > 0:
+                messages.success(request, f'Successfully published {updated_count} cumulative results.')
+            else:
+                messages.warning(request, 'No cumulative results found to publish.')
+
+        except HodProfile.DoesNotExist:
+            messages.error(request, 'HOD profile not found.')
+        except Exception as e:
+            messages.error(request, 'An error occurred while publishing cumulative results.')
+
+    return redirect('cumulative_results')
+
+
+@login_required
+def bulk_unpublish_cumulative_results(request):
+    """Bulk unpublish cumulative results for a specific level and semester"""
+    if request.user.position != 'hod':
+        messages.error(request, 'You are not authorized to perform this action.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        try:
+            profile = HodProfile.objects.get(user=request.user)
+            level_id = request.POST.get('level')
+            semester_id = request.POST.get('semester')
+
+            if not level_id or not semester_id:
+                messages.error(request, 'Level and semester are required.')
+                return redirect('cumulative_results')
+
+            # Get all published cumulative results for this level and semester
+            cumulative_results = Cummulative_Result.objects.filter(
+                department=profile.department,
+                level_id=level_id,
+                semester_id=semester_id,
+                status='approved',  # Only admin-approved results
+                hod_status='published'  # Only published results
+            )
+
+            # Bulk update to draft
+            updated_count = cumulative_results.update(hod_status='draft')
+
+            if updated_count > 0:
+                messages.success(request, f'Successfully unpublished {updated_count} cumulative results.')
+            else:
+                messages.warning(request, 'No published cumulative results found to unpublish.')
+
+        except HodProfile.DoesNotExist:
+            messages.error(request, 'HOD profile not found.')
+        except Exception as e:
+            messages.error(request, 'An error occurred while unpublishing cumulative results.')
+
+    return redirect('cumulative_results')
+
+
+@login_required
+def lecturer_cumulative_results(request):
+    """Lecturer view for cumulative results (only published ones)"""
+    if request.user.position != 'lecturer':
+        messages.error(request, 'You are not authorized to view this page.')
+        return redirect('dashboard')
+
+    try:
+        profile = LecturerProfile.objects.get(user=request.user)
+    except LecturerProfile.DoesNotExist:
+        messages.error(request, 'Lecturer profile not found.')
+        return redirect('dashboard')
+
+    # Get filter parameters
+    level_id = request.GET.get('level')
+    semester_id = request.GET.get('semester')
+
+    # Get available options
+    levels = Level.objects.all().order_by('name')
+    semesters = Semester.objects.all().order_by('name')
+
+    # Initialize empty results
+    cumulative_results = Cummulative_Result.objects.none()
+
+    # Only show results if filters are applied
+    if level_id and semester_id:
+        # Lecturers can only see HOD-published cumulative results
+        cumulative_results = Cummulative_Result.objects.filter(
+            status='approved',  # Admin approved
+            hod_status='published',  # AND HOD published
+            level_id=level_id,
+            semester_id=semester_id
+        ).select_related('student', 'level', 'semester').prefetch_related('result').order_by('student__full_name')
+
+    context = {
+        'profile': profile,
+        'levels': levels,
+        'semesters': semesters,
+        'selected_level': level_id,
+        'selected_semester': semester_id,
+        'cumulative_results': cumulative_results,
+        'user_type': 'Lecturer'
+    }
+
+    return render(request, 'dashboard/lecturer_cumulative_results.html', context)
+
+
+@login_required
+def test_cumulative_generation(request):
+    """Test function to manually generate cumulative results"""
+    if request.user.position != 'hod':
+        messages.error(request, 'You are not authorized to access this function.')
+        return redirect('dashboard')
+
+    try:
+        # Get all second semester results
+        from django.db.models import Q
+        second_semester_results = Result.objects.filter(
+            status='approved'
+        ).filter(
+            Q(semester__name__icontains='second') |
+            Q(semester__name__icontains='2nd') |
+            Q(semester__name__icontains='2ND') |
+            Q(semester__name__icontains='2') |
+            Q(semester__name__iregex=r'.*2.*')
+        )
+
+        messages.info(request, f'Found {second_semester_results.count()} second semester results')
+
+        # Try to create cumulative results for each
+        created_count = 0
+        for result in second_semester_results[:5]:  # Limit to first 5 for testing
+            cumulative = Cummulative_Result.create_cumulative_result(result)
+            if cumulative:
+                created_count += 1
+                messages.success(request, f'Created cumulative result for {result.student.full_name} - {result.level.name}')
+            else:
+                messages.warning(request, f'Failed to create cumulative result for {result.student.full_name} - {result.level.name}')
+
+        messages.info(request, f'Successfully created {created_count} cumulative results')
+
+    except Exception as e:
+        messages.error(request, f'Error during cumulative generation: {str(e)}')
+
+    return redirect('cumulative_results')
+
+
+@login_required
+def debug_cumulative_data(request):
+    """Debug view to show what data exists in the database"""
+    if request.user.position != 'hod':
+        messages.error(request, 'You are not authorized to access this function.')
+        return redirect('dashboard')
+
+    try:
+        profile = HodProfile.objects.get(user=request.user)
+
+        # Get all results for this department
+        all_results = Result.objects.filter(
+            department=profile.department,
+            status='approved'
+        ).select_related('student', 'level', 'semester').order_by('student__full_name', 'level__name', 'semester__name')
+
+        # Get all cumulative results for this department
+        all_cumulative = Cummulative_Result.objects.filter(
+            department=profile.department
+        ).select_related('student', 'level', 'semester').order_by('student__full_name', 'level__name', 'semester__name')
+
+        # Group results by student and level
+        student_data = {}
+        for result in all_results:
+            key = f"{result.student.full_name} - {result.level.name}"
+            if key not in student_data:
+                student_data[key] = {
+                    'student': result.student,
+                    'level': result.level,
+                    'regular_results': [],
+                    'cumulative_results': []
+                }
+            student_data[key]['regular_results'].append(result)
+
+        # Add cumulative results
+        for cumulative in all_cumulative:
+            key = f"{cumulative.student.full_name} - {cumulative.level.name}"
+            if key in student_data:
+                student_data[key]['cumulative_results'].append(cumulative)
+
+        # Get summary statistics
+        stats = {
+            'total_students': Result.objects.filter(department=profile.department, status='approved').values('student').distinct().count(),
+            'total_regular_results': all_results.count(),
+            'total_cumulative_results': all_cumulative.count(),
+            'levels': Level.objects.all(),
+            'semesters': Semester.objects.all(),
+            'department': profile.department.name
+        }
+
+        context = {
+            'student_data': student_data,
+            'stats': stats,
+            'profile': profile
+        }
+
+        return render(request, 'dashboard/debug_cumulative.html', context)
+
+    except Exception as e:
+        messages.error(request, f'Error during debug: {str(e)}')
+        return redirect('cumulative_results')
 
 
 @login_required
@@ -1496,4 +2110,11 @@ def publish_all_results(request):
     except Exception as e:
         messages.error(request, 'An error occurred while publishing results.')
         return redirect('view_all_results')
+
+
+
+
+
+
+
 

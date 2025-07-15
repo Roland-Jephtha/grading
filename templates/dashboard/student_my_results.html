@@ -112,7 +112,7 @@
                                 <div class="col-md-4 text-end">
                                     <div class="card bg-primary text-white">
                                         <div class="card-body text-center">
-                                            <h3 class="mb-1" style="color: white;">{{ student_result.gpa|floatformat:2 }}</h3>
+                                            <h3 class="mb-1" style="color: white;">{{ student_result.gpa }}</h3>
                                             <p class="mb-0">GPA</p>
                                         </div>
                                     </div>
@@ -144,8 +144,8 @@
                                             <td class="text-center">{{ grade.course.credit_unit }}</td>
                                             <td class="text-center">{{ grade.score }}%</td>
                                             <td class="text-center fw-bold">{{ grade.grade }}</td>
-                                            <td class="text-center">{{ grade.grade_point|floatformat:2 }}</td>
-                                            <td class="text-center text-primary fw-bold">{{ grade.grade_point|floatformat:2 }}</td>
+                                            <td class="text-center">{{ grade.grade_point }}</td>
+                                            <td class="text-center text-primary fw-bold">{{ grade.grade_point }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -154,8 +154,8 @@
                                             <th colspan="3">TOTALS</th>
                                             <th class="text-center">{{ student_result.tcu }}</th>
                                             <th colspan="3"></th>
-                                            <th class="text-center text-primary fw-bold">{{ student_result.tgp|floatformat:2 }}</th>
-                                            <th class="text-center text-dark fw-bold">{{ student_result.gpa|floatformat:2 }}</th>
+                                            <th class="text-center text-primary fw-bold">{{ student_result.tgp }}</th>
+                                            <th class="text-center text-dark fw-bold">{{ student_result.gpa }}</th>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -182,7 +182,7 @@
                                 <div class="col-md-3">
                                     <div class="card bg-primary text-white">
                                         <div class="card-body text-center">
-                                            <h4 class="mb-1">{{ student_result.tgp|floatformat:2 }}</h4>
+                                            <h4 class="mb-1">{{ student_result.tgp }}</h4>
                                             <p class="mb-0">Total Grade Points</p>
                                         </div>
                                     </div>
@@ -190,7 +190,7 @@
                                 <div class="col-md-3">
                                     <div class="card {% if student_result.remark == 'passed' %}bg-success{% else %}bg-danger{% endif %} text-white">
                                         <div class="card-body text-center">
-                                            <h4 class="mb-1">{{ student_result.gpa|floatformat:2 }}</h4>
+                                            <h4 class="mb-1">{{ student_result.gpa }}</h4>
                                             <p class="mb-0">
                                                 {% if student_result.remark == 'passed' %}
                                                     PASSED
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
             courseTitle: '{{ grade.course.title }}',
             score: {{ grade.score }},
             grade: '{{ grade.grade }}',
-            gradePoint: {{ grade.grade_point|floatformat:2 }},
+            gradePoint: {{ grade.grade_point }},
             creditUnit: {{ grade.course.credit_unit }}
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
