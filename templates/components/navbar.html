@@ -1,0 +1,36 @@
+{% load static %}
+<!-- Navigation -->
+
+
+
+
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'landing_page' %}">
+            <img src="{% static 'img/pti.png' %}" alt="PTI Logo">
+            PTI Grading System
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'landing_page' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </li>
+                <li class="nav-item ms-3">
+                    <a class="btn-nav" href="{% url 'student_signup' %}">
+                        <i class="fas fa-user-graduate me-2"></i>Student Registration
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+

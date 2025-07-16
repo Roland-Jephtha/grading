@@ -398,16 +398,11 @@
                                 return confirm(`Are you sure you want to approve all grades for ${courseData.title}?`);
                             };
                         } else if (hasApprovedGrades && !hasSubmittedGrades) {
-                            // All grades are approved - show disapprove button
-                            toggleForm.action = `/department/disapprove/${courseData.id}/`;
-                            toggleBtn.className = 'btn btn-warning btn-sm px-3';
-                            toggleIcon.className = 'fa fa-times-circle me-1';
-                            toggleText.textContent = 'Disapprove All Grades';
-
-                            toggleBtn.onclick = function(e) {
-                                console.log('Disapprove button clicked for course:', courseData.title);
-                                return confirm(`Are you sure you want to disapprove all grades for ${courseData.title}? This will change them back to submitted status.`);
-                            };
+                            // All grades are already approved - show status only
+                            toggleBtn.className = 'btn btn-outline-success btn-sm px-3';
+                            toggleBtn.disabled = true;
+                            toggleIcon.className = 'fa fa-check-circle me-1';
+                            toggleText.textContent = 'All Approved';
                         } else if (hasSubmittedGrades && hasApprovedGrades) {
                             // Mixed status - default to approve remaining
                             toggleForm.action = `/department/approve/${courseData.id}/`;
@@ -419,8 +414,11 @@
                                 return confirm(`Approve remaining submitted grades for ${courseData.title}?`);
                             };
                         } else {
-                            // Hide button if no grades
-                            toggleForm.style.display = 'none';
+                            // No grades to process
+                            toggleBtn.className = 'btn btn-secondary btn-sm px-3';
+                            toggleBtn.disabled = true;
+                            toggleIcon.className = 'fa fa-info-circle me-1';
+                            toggleText.textContent = 'No Grades';
                         }
                     }
                 }

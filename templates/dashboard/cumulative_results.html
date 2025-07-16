@@ -204,6 +204,13 @@
                                 Unpublish All
                             </button>
                         </form>
+
+
+                                 <a href="{% url 'export_cumulative_results_csv' %}?level={{ selected_level }}&semester={{ selected_semester }}"
+                   class="btn btn-success btn-sm">
+                    <i class="fas fa-file-csv me-1"></i>
+                    Export to CSV
+                </a>
                     </div>
 
                     <div class="col-md-4">
@@ -379,6 +386,15 @@
                     </table>
                 </div>
             </div>
+
+            {% comment %} <!-- CSV Export Section -->
+            <div class="d-flex justify-content-end mt-3">
+                <a href="{% url 'export_cumulative_results_csv' %}?level={{ selected_level }}&semester={{ selected_semester }}"
+                   class="btn btn-success btn-sm">
+                    <i class="fas fa-file-csv me-1"></i>
+                    Export to CSV
+                </a>
+            </div> {% endcomment %}
         </div>
 
 

@@ -2,7 +2,7 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('', dashboard, name='dashboard'),
+    path('dashboard', dashboard, name='dashboard'),
     path('grading', grading, name='grading'),
     path('fetch-students/', fetch_students, name='fetch_students'),
     path('login', login, name='login'),
@@ -11,7 +11,6 @@ urlpatterns = [
     path('submit-grades/', submit_grades, name='submit_grades'),
     path('hod/submitted-grades/', department_grades_view, name='submitted_grades'),
     path('department/approve/<int:course_id>/', approve_course_grades, name='approve_course_grades'),
-    path('department/disapprove/<int:course_id>/', disapprove_course_grades, name='disapprove_course_grades'),
 
     # Result URLs
     path('department/results/', student_results_view, name='student_results_view'),
@@ -57,6 +56,14 @@ urlpatterns = [
     # Bulk Publish/Unpublish Cumulative Results URLs
     path('bulk-publish-cumulative/', bulk_publish_cumulative_results, name='bulk_publish_cumulative_results'),
     path('bulk-unpublish-cumulative/', bulk_unpublish_cumulative_results, name='bulk_unpublish_cumulative_results'),
+
+    # CSV Export URLs
+    path('export-cumulative-csv/', export_cumulative_results_csv, name='export_cumulative_results_csv'),
+    path('export-results-csv/', export_results_csv, name='export_results_csv'),
+
+    # Landing Page and Signup URLs
+    path('', landing_page, name='landing_page'),
+    path('signup/', student_signup, name='student_signup'),
 
     # path('submit/', views.submit, name='submit'),
 ]

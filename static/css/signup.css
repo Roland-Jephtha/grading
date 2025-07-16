@@ -1,0 +1,140 @@
+/* Additional styles for signup form */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    background-color: #f8fff8;
+}
+
+.form-select.is-invalid {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.form-select.is-valid {
+    border-color: #28a745;
+    background-color: #f8fff8;
+}
+
+/* Password strength indicator */
+.password-strength {
+    margin-top: 5px;
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.password-strength-bar {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.strength-weak {
+    background: #dc3545;
+    width: 25%;
+}
+
+.strength-fair {
+    background: #ffc107;
+    width: 50%;
+}
+
+.strength-good {
+    background: #17a2b8;
+    width: 75%;
+}
+
+.strength-strong {
+    background: #28a745;
+    width: 100%;
+}
+
+/* Form animations */
+.form-group {
+    transition: all 0.3s ease;
+}
+
+.form-group:hover {
+    transform: translateY(-1px);
+}
+
+/* Step transition animations */
+.form-step {
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 0.5s ease;
+}
+
+.form-step.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Button hover effects */
+.btn-step:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Loading spinner */
+.btn-step:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 576px) {
+    .form-navigation {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .btn-step {
+        width: 100%;
+    }
+}
+
+/* Success animation */
+@keyframes checkmark {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.step-indicator.completed .step-number i {
+    animation: checkmark 0.5s ease;
+}
+
+/* Focus states */
+.form-control:focus,
+.form-select:focus {
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}
+
+/* Error message styling */
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Success message styling */
+.success-message {
+    color: #28a745;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: block;
+}

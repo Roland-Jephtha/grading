@@ -8,6 +8,7 @@ from .forms import GradeForm, StudentProfileForm, LecturerProfileForm, HodProfil
 from django.db import models
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
 
 
 
@@ -1820,6 +1821,176 @@ def bulk_unpublish_cumulative_results(request):
 
 
 @login_required
+def export_cumulative_results_csv(request):
+    """Export cumulative results to CSV"""
+    if request.user.position not in ['hod', 'admin']:
+        messages.error(request, 'You are not authorized to export cumulative results.')
+        return redirect('dashboard')
+
+    try:
+        import csv
+        from django.http import HttpResponse
+
+        # Get filter parameters
+        level_param = request.GET.get('level')
+        semester_param = request.GET.get('semester')
+
+        if not level_param or not semester_param:
+            messages.error(request, 'Level and semester are required for CSV export.')
+            return redirect('cumulative_results')
+
+        # Get user profile
+        if request.user.position == 'hod':
+            profile = HodProfile.objects.get(user=request.user)
+            department_filter = {'department': profile.department}
+        else:
+            department_filter = {}  # Admin can see all departments
+
+        # Handle both ID and name parameters
+        try:
+            # Try to get level by ID first
+            if level_param.isdigit():
+                level_obj = Level.objects.get(id=level_param)
+                level_filter = {'level_id': level_param}
+            else:
+                # If not digit, treat as name
+                level_obj = Level.objects.get(name=level_param)
+                level_filter = {'level': level_obj}
+        except Level.DoesNotExist:
+            messages.error(request, f'Level "{level_param}" not found.')
+            return redirect('cumulative_results')
+
+        try:
+            # Try to get semester by ID first
+            if semester_param.isdigit():
+                semester_obj = Semester.objects.get(id=semester_param)
+                semester_filter = {'semester_id': semester_param}
+            else:
+                # If not digit, treat as name
+                semester_obj = Semester.objects.get(name=semester_param)
+                semester_filter = {'semester': semester_obj}
+        except Semester.DoesNotExist:
+            messages.error(request, f'Semester "{semester_param}" not found.')
+            return redirect('cumulative_results')
+
+        # Get cumulative results
+        cumulative_results = Cummulative_Result.objects.filter(
+            status='approved',
+            **level_filter,
+            **semester_filter,
+            **department_filter
+        ).select_related('student', 'level', 'semester', 'department').prefetch_related('result')
+
+        # Create HTTP response with CSV content type
+        response = HttpResponse(content_type='text/csv')
+        level_name = level_obj.name
+        semester_name = semester_obj.name
+        filename = f'cumulative_results_{level_name}_{semester_name}.csv'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        # Create CSV writer
+        writer = csv.writer(response)
+
+        # Write title and summary information
+        writer.writerow([f'CUMULATIVE RESULTS EXPORT - {level_name} {semester_name}'])
+        writer.writerow([f'Department: {profile.department.name if request.user.position == "hod" else "All Departments"}'])
+        writer.writerow([f'Export Date: {timezone.now().strftime("%Y-%m-%d %H:%M:%S")}'])
+        writer.writerow([])  # Empty row
+
+        # Calculate summary statistics for cumulative results
+        total_students = cumulative_results.count()
+        distinction_students = cumulative_results.filter(yearly_cumulative_gpa__gte=3.5).count()
+        upper_credit_students = cumulative_results.filter(yearly_cumulative_gpa__gte=3.0, yearly_cumulative_gpa__lt=3.5).count()
+        lower_credit_students = cumulative_results.filter(yearly_cumulative_gpa__gte=2.5, yearly_cumulative_gpa__lt=3.0).count()
+        pass_students = cumulative_results.filter(yearly_cumulative_gpa__gte=2.0, yearly_cumulative_gpa__lt=2.5).count()
+        fail_students = cumulative_results.filter(yearly_cumulative_gpa__lt=2.0).count()
+
+        # Write summary statistics
+        writer.writerow(['CUMULATIVE RESULTS SUMMARY'])
+        writer.writerow(['Total Students:', total_students])
+        writer.writerow(['Distinction (3.50-4.00):', distinction_students])
+        writer.writerow(['Upper Credit (3.00-3.49):', upper_credit_students])
+        writer.writerow(['Lower Credit (2.50-2.99):', lower_credit_students])
+        writer.writerow(['Pass (2.00-2.49):', pass_students])
+        writer.writerow(['Fail (Below 2.00):', fail_students])
+        writer.writerow([])  # Empty row
+
+        # Get all courses for this level and semester
+        from django.db.models import Q
+        courses = Course.objects.filter(
+            **level_filter,
+            **semester_filter,
+            **({'department': profile.department} if request.user.position == 'hod' else {})
+        ).order_by('code')
+
+        # Write courses section
+        writer.writerow(['COURSES OFFERED'])
+        writer.writerow(['Course Code', 'Course Title', 'Credit Units', 'Department'])
+        for course in courses:
+            writer.writerow([
+                course.code,
+                course.title,
+                course.credit_unit,
+                course.department.name
+            ])
+        writer.writerow([])  # Empty row
+
+        # Write cumulative results header
+        writer.writerow(['STUDENT CUMULATIVE RESULTS'])
+        writer.writerow([
+            'S/N',
+            'Student Name',
+            'Matric Number',
+            'Department',
+            'Level',
+            'Semester',
+            'Academic Year',
+            'Current GPA',
+            'Yearly Cumulative GPA',
+            'Overall Cumulative GPA',
+            'Total Credit Units',
+            'Cumulative TCU',
+            'Remark',
+            'Admin Status',
+            'HOD Status',
+            'Created Date'
+        ])
+
+        # Write data rows
+        for index, result in enumerate(cumulative_results, 1):
+            # Get remark display
+            remark_display = result.get_remark_display() if result.remark else 'N/A'
+
+            writer.writerow([
+                index,
+                result.student.full_name,
+                result.student.matric_number,
+                result.department.name,
+                result.level.name,
+                result.semester.name,
+                result.academic_year or 'N/A',
+                f"{result.current_gpa:.3f}" if result.current_gpa else '0.000',
+                f"{result.yearly_cumulative_gpa:.3f}" if result.yearly_cumulative_gpa else '0.000',
+                f"{result.overall_cumulative_gpa:.3f}" if result.overall_cumulative_gpa else '0.000',
+                result.tcu or 0,
+                result.cumulative_tcu or 0,
+                remark_display,
+                result.status.title(),
+                result.hod_status.title(),
+                result.created.strftime('%Y-%m-%d %H:%M:%S')
+            ])
+
+        return response
+
+    except (HodProfile.DoesNotExist, Level.DoesNotExist, Semester.DoesNotExist):
+        messages.error(request, 'Required data not found.')
+        return redirect('cumulative_results')
+    except Exception as e:
+        messages.error(request, f'Error exporting CSV: {str(e)}')
+        return redirect('cumulative_results')
+
+
+@login_required
 def lecturer_cumulative_results(request):
     """Lecturer view for cumulative results (only published ones)"""
     if request.user.position != 'lecturer':
@@ -2112,9 +2283,271 @@ def publish_all_results(request):
         return redirect('view_all_results')
 
 
+@login_required
+def export_results_csv(request):
+    """Export regular results to CSV (HOD view)"""
+    if request.user.position not in ['hod', 'admin']:
+        messages.error(request, 'You are not authorized to export results.')
+        return redirect('dashboard')
+
+    try:
+        import csv
+        from django.http import HttpResponse
+
+        # Get filter parameters
+        level_param = request.GET.get('level')
+        semester_param = request.GET.get('semester')
+
+        if not level_param or not semester_param:
+            messages.error(request, 'Level and semester are required for CSV export.')
+            return redirect('view_all_results')
+
+        # Get user profile
+        if request.user.position == 'hod':
+            profile = HodProfile.objects.get(user=request.user)
+            department_filter = {'department': profile.department}
+        else:
+            department_filter = {}  # Admin can see all departments
+
+        # Handle both ID and name parameters
+        try:
+            # Try to get level by ID first
+            if level_param.isdigit():
+                level_obj = Level.objects.get(id=level_param)
+                level_filter = {'level_id': level_param}
+            else:
+                # If not digit, treat as name
+                level_obj = Level.objects.get(name=level_param)
+                level_filter = {'level': level_obj}
+        except Level.DoesNotExist:
+            messages.error(request, f'Level "{level_param}" not found.')
+            return redirect('view_all_results')
+
+        try:
+            # Try to get semester by ID first
+            if semester_param.isdigit():
+                semester_obj = Semester.objects.get(id=semester_param)
+                semester_filter = {'semester_id': semester_param}
+            else:
+                # If not digit, treat as name
+                semester_obj = Semester.objects.get(name=semester_param)
+                semester_filter = {'semester': semester_obj}
+        except Semester.DoesNotExist:
+            messages.error(request, f'Semester "{semester_param}" not found.')
+            return redirect('view_all_results')
+
+        # Get results
+        results = Result.objects.filter(
+            status='approved',
+            **level_filter,
+            **semester_filter,
+            **department_filter
+        ).select_related('student', 'level', 'semester', 'department').prefetch_related('grade_score__course')
+
+        # Create HTTP response with CSV content type
+        response = HttpResponse(content_type='text/csv')
+        level_name = level_obj.name
+        semester_name = semester_obj.name
+        filename = f'results_{level_name}_{semester_name}.csv'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        # Create CSV writer
+        writer = csv.writer(response)
+
+        # Write title and summary information
+        writer.writerow([f'RESULTS EXPORT - {level_name} {semester_name}'])
+        writer.writerow([f'Department: {profile.department.name if request.user.position == "hod" else "All Departments"}'])
+        writer.writerow([f'Export Date: {timezone.now().strftime("%Y-%m-%d %H:%M:%S")}'])
+        writer.writerow([])  # Empty row
+
+        # Calculate summary statistics
+        total_students = results.count()
+        passed_students = results.filter(gpa__gte=2.0).count()
+        failed_students = results.filter(gpa__lt=2.0).count()
+        distinction_students = results.filter(gpa__gte=3.5).count()
+        upper_credit_students = results.filter(gpa__gte=3.0, gpa__lt=3.5).count()
+        lower_credit_students = results.filter(gpa__gte=2.5, gpa__lt=3.0).count()
+        pass_students = results.filter(gpa__gte=2.0, gpa__lt=2.5).count()
+
+        # Write summary statistics
+        writer.writerow(['SUMMARY STATISTICS'])
+        writer.writerow(['Total Students:', total_students])
+        writer.writerow(['Passed Students:', passed_students])
+        writer.writerow(['Failed Students:', failed_students])
+        writer.writerow(['Distinction (3.50-4.00):', distinction_students])
+        writer.writerow(['Upper Credit (3.00-3.49):', upper_credit_students])
+        writer.writerow(['Lower Credit (2.50-2.99):', lower_credit_students])
+        writer.writerow(['Pass (2.00-2.49):', pass_students])
+        writer.writerow(['Fail (Below 2.00):', failed_students])
+        writer.writerow([])  # Empty row
+
+        # Get all courses for this level and semester
+        from django.db.models import Q
+        courses = Course.objects.filter(
+            **level_filter,
+            **semester_filter,
+            **({'department': profile.department} if request.user.position == 'hod' else {})
+        ).order_by('code')
+
+        # Write courses section
+        writer.writerow(['COURSES OFFERED'])
+        writer.writerow(['Course Code', 'Course Title', 'Credit Units', 'Department'])
+        for course in courses:
+            writer.writerow([
+                course.code,
+                course.title,
+                course.credit_unit,
+                course.department.name
+            ])
+        writer.writerow([])  # Empty row
+
+        # Write student results header
+        writer.writerow(['STUDENT RESULTS'])
+        writer.writerow([
+            'S/N',
+            'Student Name',
+            'Matric Number',
+            'Department',
+            'Level',
+            'Semester',
+            'Courses & Grades',
+            'TGP',
+            'GPA',
+            'TCU',
+            'Remark',
+            'Admin Status',
+            'HOD Status',
+            'Created Date'
+        ])
+
+        # Write data rows
+        for index, result in enumerate(results, 1):
+            # Get courses and grades
+            grades = result.grade_score.all()
+            courses_grades = ", ".join([f"{g.course.code}({g.score}={g.grade})" for g in grades]) if grades else "No grades"
+
+            # Get remark display
+            remark_display = result.get_remark_display() if result.remark else 'N/A'
+
+            writer.writerow([
+                index,
+                result.student.full_name,
+                result.student.matric_number,
+                result.department.name,
+                result.level.name,
+                result.semester.name,
+                courses_grades,
+                f"{result.tgp:.3f}" if result.tgp else '0.000',
+                f"{result.gpa:.3f}" if result.gpa else '0.000',
+                result.tcu or 0,
+                remark_display,
+                result.status.title(),
+                result.hod_status.title(),
+                result.created.strftime('%Y-%m-%d %H:%M:%S')
+            ])
+
+        return response
+
+    except (HodProfile.DoesNotExist, Level.DoesNotExist, Semester.DoesNotExist):
+        messages.error(request, 'Required data not found.')
+        return redirect('view_all_results')
+    except Exception as e:
+        messages.error(request, f'Error exporting CSV: {str(e)}')
+        return redirect('view_all_results')
 
 
 
 
 
 
+def landing_page(request):
+    """Landing page for the application"""
+    return render(request, 'auth/landing.html')
+
+
+
+
+
+
+
+def student_signup(request):
+    """Multi-step student signup form"""
+    if request.method == 'POST':
+        try:
+            # Get form data
+            full_name = request.POST.get('full_name')
+            email = request.POST.get('email')
+            phone = request.POST.get('phone')
+            matric_number = request.POST.get('matric_number')
+            department_id = request.POST.get('department')
+            level_id = request.POST.get('level')
+            semester_id = request.POST.get('semester')
+            username = request.POST.get('username')
+            password1 = request.POST.get('password1')
+            password2 = request.POST.get('password2')
+
+            # Validation
+            errors = {}
+
+            # Check if passwords match
+            if password1 != password2:
+                errors['password'] = 'Passwords do not match'
+
+            # Check if username already exists
+            if CustomUser.objects.filter(username=username).exists():
+                errors['username'] = 'Username already exists'
+
+            # Check if email already exists
+            if CustomUser.objects.filter(email=email).exists():
+                errors['email'] = 'Email already exists'
+
+            # Check if matric number already exists
+            if StudentProfile.objects.filter(matric_number=matric_number).exists():
+                errors['matric_number'] = 'Matriculation number already exists'
+
+            if errors:
+                # Return form with errors
+                context = {
+                    'departments': Department.objects.all(),
+                    'levels': Level.objects.all(),
+                    'semesters': Semester.objects.all(),
+                    'entry_years': range(2020, timezone.now().year + 2),
+                    'form_errors': errors,
+                    'form_data': request.POST
+                }
+                return render(request, 'auth/student_signup.html', context)
+
+            # Create user
+            user = CustomUser.objects.create_user(
+                username=username,
+                email=email,
+                password=password1,
+                position='student'
+            )
+
+            # Create student profile
+            student_profile = StudentProfile.objects.create(
+                user=user,
+                matric_number=matric_number,
+                department_id=department_id,
+                level_id=level_id,
+                semester_id=semester_id,
+                full_name=full_name,
+                phone=phone,
+
+            )
+
+            messages.success(request, 'Account created successfully! You can now login.')
+            return redirect('login')
+
+        except Exception as e:
+            messages.error(request, f'An error occurred during registration: {str(e)}')
+
+    # GET request - show form
+    context = {
+        'departments': Department.objects.all(),
+        'levels': Level.objects.all(),
+        'semesters': Semester.objects.all(),
+        'entry_years': range(2020, timezone.now().year + 2),
+    }
+    return render(request, 'auth/student_signup.html', context)

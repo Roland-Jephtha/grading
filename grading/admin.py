@@ -163,7 +163,54 @@ class HodProfileAdmin(ModelAdmin):
 class Cum_ResultAdmin(ModelAdmin):
     list_display = ('student',  'department', 'level', 'semester',  'cumulative_tcu', 'cumulative_gpa', 'remark' )
     search_fields = ('student__full_name', 'student__matric_number')
-    list_filter = ('department', 'level', 'semester')
+    list_filter = ('department', 'level', 'semester', 'status', 'hod_status')
+    actions = ['export_cumulative_as_csv', 'mark_as_approved', 'mark_as_published']
+
+    def export_cumulative_as_csv(self, request, queryset):
+        """Export selected cumulative results to CSV"""
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="cumulative_results.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Student Name', 'Matric Number', 'Department', 'Level', 'Semester',
+            'Academic Year', 'Current GPA', 'Yearly CGPA', 'Overall CGPA',
+            'TCU', 'Cumulative TCU', 'Remark', 'Admin Status', 'HOD Status', 'Created Date'
+        ])
+
+        for obj in queryset:
+            writer.writerow([
+                str(obj.student.full_name),
+                obj.student.matric_number,
+                str(obj.department.name),
+                str(obj.level.name),
+                str(obj.semester.name),
+                obj.academic_year or 'N/A',
+                f"{obj.current_gpa:.3f}" if obj.current_gpa else '0.000',
+                f"{obj.yearly_cumulative_gpa:.3f}" if obj.yearly_cumulative_gpa else '0.000',
+                f"{obj.overall_cumulative_gpa:.3f}" if obj.overall_cumulative_gpa else '0.000',
+                obj.tcu or 0,
+                obj.cumulative_tcu or 0,
+                obj.get_remark_display() if obj.remark else 'N/A',
+                obj.status.title(),
+                obj.hod_status.title(),
+                obj.created.strftime('%Y-%m-%d %H:%M:%S')
+            ])
+
+        return response
+    export_cumulative_as_csv.short_description = "Export Selected Cumulative Results as CSV"
+
+    def mark_as_approved(self, request, queryset):
+        """Mark selected cumulative results as approved (Admin)"""
+        updated = queryset.update(status='approved')
+        self.message_user(request, f"{updated} cumulative result(s) marked as approved.")
+    mark_as_approved.short_description = "Mark selected as Approved (Admin)"
+
+    def mark_as_published(self, request, queryset):
+        """Mark selected cumulative results as published (HOD)"""
+        updated = queryset.update(hod_status='published')
+        self.message_user(request, f"{updated} cumulative result(s) marked as published.")
+    mark_as_published.short_description = "Mark selected as Published (HOD)"
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(StudentProfile, StudentProfileAdmin)

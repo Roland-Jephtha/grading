@@ -107,6 +107,14 @@
                                 <button onclick="publishAllResults()" class="btn btn-success btn-sm ms-3" title="Publish All Results">
                                     <i class="fas fa-check"></i> Publish All Results
                                 </button>
+
+
+                                 <a href="{% url 'export_results_csv' %}?level={{ selected_level }}&semester={{ selected_semester }}"
+                                   class="btn btn-success btn-sm">
+                                    <i class="fas fa-file-csv me-1"></i>
+                                    Export to CSV
+                                </a>
+                                
                             </div>
                             
                             <div class="table-responsive">
@@ -185,11 +193,11 @@
                                                     <div class="fw-bold">{{ result.tcu|default:0 }}</div>
                                                 </td>
                                                 <td class="text-center">
-                                                    <div class="fw-bold">{{ result.tgp|default:0 }}</div>
+                                                    <div class="fw-bold">{{ result.tgp|default:0|floatformat:3 }}</div>
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="fw-bold {% if result.gpa >= 3.5 %}text-success{% elif result.gpa >= 2.5 %}text-warning{% else %}text-danger{% endif %}">
-                                                        {{ result.gpa|default:0 }}
+                                                        {{ result.gpa|default:0|floatformat:3 }}
                                                     </div>
                                                 </td>
                                                 <td class="text-center">
@@ -220,6 +228,15 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- CSV Export Section -->
+                            {% comment %} <div class="d-flex justify-content-end mt-3">
+                                <a href="{% url 'export_results_csv' %}?level={{ selected_level }}&semester={{ selected_semester }}"
+                                   class="btn btn-success btn-sm">
+                                    <i class="fas fa-file-csv me-1"></i>
+                                    Export to CSV
+                                </a>
+                            </div> {% endcomment %}
 
                             <!-- Summary Statistics -->
                             <div class="row mt-4" id="chartsSection">
