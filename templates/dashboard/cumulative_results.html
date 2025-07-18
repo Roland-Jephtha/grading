@@ -206,11 +206,11 @@
                         </form>
 
 
-                                 <a href="{% url 'export_cumulative_results_csv' %}?level={{ selected_level }}&semester={{ selected_semester }}"
+                                 {% comment %} <a href="{% url 'export_cumulative_results_csv' %}?level={{ selected_level }}&semester={{ selected_semester }}"
                    class="btn btn-success btn-sm">
                     <i class="fas fa-file-csv me-1"></i>
                     Export to CSV
-                </a>
+                </a> {% endcomment %}
                     </div>
 
                     <div class="col-md-4">

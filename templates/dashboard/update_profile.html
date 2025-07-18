@@ -36,7 +36,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        <h4 class="text-black font-w700">{{ user.first_name|default:user.username }}</h4>
+                        <h4 class="text-black font-w700">{{ user.first_name|default:profile.full_name }}</h4>
                         <p class="text-muted">{{ user.position }}</p>
                         {% if user.position == 'student' %}
                             <span class="badge badge-primary">{{ profile.matric_number|default:"Not Set" }}</span>

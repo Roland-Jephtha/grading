@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,129 +8,63 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% include 'components/base_styles.html' %}
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body {
+            background: #f8fafc;
+            padding-top: 80px;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            {% comment %} background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); {% endcomment %}
-            min-height: 100vh;
+        .main-content {
+            padding: 40px 0 60px;
+            min-height: calc(100vh - 160px);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
 
         .signup-container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             max-width: 500px;
             width: 100%;
+            border: 1px solid #e5e7eb;
+            margin: 0 auto;
         }
 
         .signup-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 32px 32px 24px;
             text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .signup-logo {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .signup-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #1e293b;
         }
 
         .signup-subtitle {
-            font-size: 1rem;
-            opacity: 0.9;
-            margin-bottom: 20px;
-        }
-
-        .progress-container {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 3px;
-            margin-bottom: 20px;
-        }
-
-        .progress-bar-custom {
-            background: white;
-            height: 6px;
-            border-radius: 6px;
-            transition: width 0.4s ease;
-        }
-
-        .step-indicators {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .step-indicator {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-        }
-
-        .step-number {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-bottom: 5px;
             font-size: 0.9rem;
-            color: white;
+            color: #64748b;
+            margin: 0;
         }
 
-        .step-indicator.active .step-number {
-            background: white;
-            color: #667eea;
-        }
-
-        .step-indicator.completed .step-number {
-            background: rgba(16, 185, 129, 0.9);
-            color: white;
-        }
-
-        .step-label {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.8);
-            text-align: center;
-        }
-
-        .signup-body {
-            padding: 30px;
-        }
-
-        .step-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-
-        .step-description {
-            color: #6b7280;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-bottom: 25px;
+        .signup-form {
+            padding: 32px;
         }
 
         .form-step {
@@ -138,12 +73,38 @@
 
         .form-step.active {
             display: block;
-            animation: fadeIn 0.3s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .step-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .step-description {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .progress-bar {
+            background: #f1f5f9;
+            height: 4px;
+            border-radius: 2px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #3b82f6;
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.4s ease;
         }
 
         .form-group {
@@ -153,9 +114,9 @@
         .form-label {
             font-weight: 500;
             color: #374151;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: block;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
         }
 
         .input-wrapper {
@@ -164,115 +125,115 @@
 
         .input-icon {
             position: absolute;
-            left: 15px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
             color: #9ca3af;
-            font-size: 1rem;
-            z-index: 2;
+            font-size: 0.9rem;
+            pointer-events: none;
         }
 
         .form-control, .form-select {
             width: 100%;
-            padding: 12px 15px 12px 45px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
+            padding: 12px 16px 12px 44px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
             font-size: 0.9rem;
-            transition: all 0.3s ease;
-            background: #f9fafb;
+            transition: all 0.2s ease;
+            background: #fafafa;
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             outline: none;
             background: white;
         }
 
-        .form-control:focus + .input-icon {
-            color: #667eea;
+        .form-control:focus ~ .input-icon, .form-select:focus ~ .input-icon {
+            color: #3b82f6;
         }
 
-        .form-control.is-invalid {
-            border-color: #ef4444;
-        }
-
-        .form-control.is-valid {
-            border-color: #10b981;
+        .form-control::placeholder {
+            color: #9ca3af;
         }
 
         .password-toggle {
             position: absolute;
-            right: 15px;
+            right: 14px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
             color: #9ca3af;
             cursor: pointer;
-            font-size: 1rem;
-            z-index: 2;
+            font-size: 0.9rem;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
         }
 
         .password-toggle:hover {
-            color: #667eea;
+            color: #3b82f6;
+            background: #f3f4f6;
         }
 
         .btn-step {
-            padding: 12px 30px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            border-radius: 10px;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 8px;
             border: none;
-            transition: all 0.3s ease;
-            min-width: 120px;
+            transition: all 0.2s ease;
+            min-width: 100px;
             cursor: pointer;
         }
 
         .btn-primary-step {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #3b82f6;
             color: white;
         }
 
         .btn-primary-step:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
         .btn-secondary-step {
-            background: #6b7280;
-            color: white;
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
         }
 
         .btn-secondary-step:hover {
-            background: #4b5563;
-            transform: translateY(-2px);
+            background: #e5e7eb;
         }
 
         .form-navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 25px;
+            margin-top: 24px;
             padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #f3f4f6;
         }
 
         .back-to-login {
             text-align: center;
-            padding: 20px;
+            padding: 20px 32px;
             background: #f9fafb;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #f3f4f6;
         }
 
         .back-to-login p {
             margin: 0;
-            color: #6b7280;
-            font-size: 0.9rem;
+            color: #64748b;
+            font-size: 0.875rem;
         }
 
         .back-to-login a {
-            color: #667eea;
+            color: #3b82f6;
             text-decoration: none;
             font-weight: 500;
         }
@@ -282,52 +243,36 @@
         }
 
         .alert-custom {
+            border-radius: 8px;
             border: none;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: #fee2e2;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
             color: #dc2626;
-            border-left: 4px solid #dc2626;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            border: 1px solid #fecaca;
         }
 
         @media (max-width: 768px) {
             .signup-container {
-                margin: 10px;
-                border-radius: 15px;
+                margin: 20px;
             }
-            
-            .signup-header, .signup-body {
-                padding: 20px;
+
+            .signup-header, .signup-form, .back-to-login {
+                padding-left: 24px;
+                padding-right: 24px;
             }
-            
-            .signup-title {
-                font-size: 1.5rem;
+
+            .form-navigation {
+                flex-direction: column;
+                gap: 12px;
             }
-            
-            .step-number {
-                width: 30px;
-                height: 30px;
-                font-size: 0.8rem;
-            }
-            
-            .step-label {
-                font-size: 0.7rem;
+
+            .btn-step {
+                width: 100%;
             }
         }
     </style>
@@ -338,220 +283,259 @@
 
 
 
+  {% include 'components/preloader.html' %}
 
+    {% include 'components/navbar.html' %}
 
-
-
-
-
-
-    <div class="signup-container">
-        <!-- Header -->
-        <div class="signup-header">
-            <h1 class="signup-title">
-                <i class="fas fa-user-graduate"></i>
-                Student Registration
-            </h1>
-            <p class="signup-subtitle">Join PTI Online Grading System</p>
-            
-            <!-- Progress Bar -->
-            <div class="progress-container">
-                <div class="progress-bar-custom" id="progressBar" style="width: 33.33%"></div>
-            </div>
-            
-            <!-- Step Indicators -->
-            <div class="step-indicators">
-                <div class="step-indicator active" id="step1Indicator">
-                    <div class="step-number">1</div>
-                    <div class="step-label">Personal</div>
-                </div>
-                <div class="step-indicator" id="step2Indicator">
-                    <div class="step-number">2</div>
-                    <div class="step-label">Academic</div>
-                </div>
-                <div class="step-indicator" id="step3Indicator">
-                    <div class="step-number">3</div>
-                    <div class="step-label">Account</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Body -->
-        <div class="signup-body">
-            <form id="signupForm" method="POST" action="{% url 'student_signup' %}">
-                {% csrf_token %}
-                
-                <!-- Step 1: Personal Information -->
-                <div class="form-step active" id="step1">
-                    <h2 class="step-title">Personal Information</h2>
-                    <p class="step-description">Let's start with your basic details</p>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Full Name *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-user input-icon"></i>
-                            <input type="text" class="form-control" name="full_name" id="full_name" placeholder="Enter your full name" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Email Address *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-envelope input-icon"></i>
-                            <input type="email" class="form-control" name="email" id="email" placeholder="Enter your email address" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Phone Number *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-phone input-icon"></i>
-                            <input type="tel" class="form-control" name="phone" id="phone" placeholder="Enter your phone number" required>
-                        </div>
-                    </div>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <div class="signup-container">
+                <!-- Header -->
+                <div class="signup-header">
+                    {% comment %} <img src="{% static 'img/pti.png' %}" alt="PTI Logo" class="signup-logo"> {% endcomment %}
+                    <h1 class="signup-title">Student Registration</h1>
+                    <p class="signup-subtitle">Create your PTI student account</p>
                 </div>
 
-                <!-- Step 2: Academic Information -->
-                <div class="form-step" id="step2">
-                    <h2 class="step-title">Academic Information</h2>
-                    <p class="step-description">Tell us about your academic details</p>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Matriculation Number *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-id-card input-icon"></i>
-                            <input type="text" class="form-control" name="matric_number" id="matric_number" placeholder="Enter your matric number" required>
+                <!-- Form -->
+                <div class="signup-form">
+                    <!-- Display form errors -->
+                    {% if form_errors %}
+                        <div class="alert alert-danger alert-custom">
+                            {% for field, error in form_errors.items %}
+                                <div><strong>{{ field|title }}:</strong> {{ error }}</div>
+                            {% endfor %}
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Department *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-building input-icon"></i>
-                            <select class="form-select" name="department" id="department" required>
-                                <option value="">Select Department</option>
-                                <option value="1">Computer Science</option>
-                                <option value="2">Mathematics</option>
-                                <option value="3">Physics</option>
-                                <option value="4">Chemistry</option>
-                            </select>
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'student_signup' %}">
+                        {% csrf_token %}
+
+                        <!-- Step 1: Personal Information -->
+                        <div class="form-step active" id="step1">
+                            <div class="step-header">
+                                <h2 class="step-title">Personal Information</h2>
+                                <p class="step-description">Let's start with your basic information</p>
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressBar" style="width: 33.33%;"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Full Name *</label>
+                                <div class="input-wrapper">
+                                    <input type="text" class="form-control" name="full_name" id="full_name"
+                                           placeholder="Enter your full name" required
+                                           value="{{ form_data.full_name|default:'' }}">
+                                    <i class="fas fa-user input-icon"></i>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Email Address *</label>
+                                <div class="input-wrapper">
+                                    <input type="email" class="form-control" name="email" id="email"
+                                           placeholder="Enter your email address" required
+                                           value="{{ form_data.email|default:'' }}">
+                                    <i class="fas fa-envelope input-icon"></i>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Phone Number *</label>
+                                <div class="input-wrapper">
+                                    <input type="tel" class="form-control" name="phone" id="phone"
+                                           placeholder="Enter your phone number" required
+                                           value="{{ form_data.phone|default:'' }}">
+                                    <i class="fas fa-phone input-icon"></i>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
+
+                        <!-- Step 2: Academic Information -->
+                        <div class="form-step" id="step2">
+                            <div class="step-header">
+                                <h2 class="step-title">Academic Information</h2>
+                                <p class="step-description">Tell us about your academic details</p>
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 66.66%;"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Matriculation Number *</label>
+                                <div class="input-wrapper">
+                                    <input type="text" class="form-control" name="matric_number" id="matric_number"
+                                           placeholder="Enter your matriculation number" required
+                                           value="{{ form_data.matric_number|default:'' }}">
+                                    <i class="fas fa-id-card input-icon"></i>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Department *</label>
+                                <div class="input-wrapper">
+                                    <select class="form-select" name="department" id="department" required>
+                                        <option value="">Select Department</option>
+                                        {% for department in departments %}
+                                            <option value="{{ department.id }}"
+                                                    {% if form_data.department == department.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ department.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <i class="fas fa-building input-icon"></i>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label class="form-label">Level *</label>
                                 <div class="input-wrapper">
-                                    <i class="fas fa-layer-group input-icon"></i>
                                     <select class="form-select" name="level" id="level" required>
                                         <option value="">Select Level</option>
-                                        <option value="1">100 Level</option>
-                                        <option value="2">200 Level</option>
-                                        <option value="3">300 Level</option>
-                                        <option value="4">400 Level</option>
+                                        {% for level in levels %}
+                                            <option value="{{ level.id }}"
+                                                    {% if form_data.level == level.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ level.name }}
+                                            </option>
+                                        {% endfor %}
                                     </select>
+                                    <i class="fas fa-layer-group input-icon"></i>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
+
                             <div class="form-group">
                                 <label class="form-label">Semester *</label>
                                 <div class="input-wrapper">
-                                    <i class="fas fa-calendar-alt input-icon"></i>
                                     <select class="form-select" name="semester" id="semester" required>
                                         <option value="">Select Semester</option>
-                                        <option value="1">First Semester</option>
-                                        <option value="2">Second Semester</option>
+                                        {% for semester in semesters %}
+                                            <option value="{{ semester.id }}"
+                                                    {% if form_data.semester == semester.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ semester.name }}
+                                            </option>
+                                        {% endfor %}
                                     </select>
+                                    <i class="fas fa-calendar input-icon"></i>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Entry Year *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-calendar input-icon"></i>
-                            <select class="form-select" name="entry_year" id="entry_year" required>
-                                <option value="">Select Entry Year</option>
-                                <option value="2024">2024</option>
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                                <option value="2021">2021</option>
-                            </select>
+
+                        <!-- Step 3: Account Setup -->
+                        <div class="form-step" id="step3">
+                            <div class="step-header">
+                                <h2 class="step-title">Account Setup</h2>
+                                <p class="step-description">Create your login credentials</p>
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%;"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Username (Auto-generated) *</label>
+                                <div class="input-wrapper">
+                                    <input type="text" class="form-control" name="username" id="username"
+                                           placeholder="Username will be generated automatically" readonly
+                                           value="{{ form_data.username|default:'' }}" style="background: #f8f9fa; cursor: not-allowed;">
+                                    <i class="fas fa-user-circle input-icon"></i>
+                                </div>
+                                <small class="text-muted">Username will be generated from your matriculation number</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Password *</label>
+                                <div class="input-wrapper">
+                                    <input type="password" class="form-control" name="password1" id="password1"
+                                           placeholder="Create a strong password" required>
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password1')">
+                                        <i class="fas fa-eye" id="password1-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Confirm Password *</label>
+                                <div class="input-wrapper">
+                                    <input type="password" class="form-control" name="password2" id="password2"
+                                           placeholder="Confirm your password" required>
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password2')">
+                                        <i class="fas fa-eye" id="password2-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+
+                        <!-- Navigation -->
+                        <div class="form-navigation">
+                            <button type="button" class="btn-step btn-secondary-step" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+                                <i class="fas fa-arrow-left me-2"></i>Previous
+                            </button>
+                            <button type="button" class="btn-step btn-primary-step" id="nextBtn" onclick="changeStep(1)">
+                                Next<i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <button type="submit" class="btn-step btn-primary-step" id="submitBtn" style="display: none;" onclick="handleSubmit()">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
-                <!-- Step 3: Account Setup -->
-                <div class="form-step" id="step3">
-                    <h2 class="step-title">Account Setup</h2>
-                    <p class="step-description">Create your login credentials</p>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Username *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-user-circle input-icon"></i>
-                            <input type="text" class="form-control" name="username" id="username" placeholder="Choose a username" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Password *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input type="password" class="form-control" name="password1" id="password1" placeholder="Create a password" required>
-                            <i class="fas fa-eye password-toggle" onclick="togglePassword('password1')"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Confirm Password *</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input type="password" class="form-control" name="password2" id="password2" placeholder="Confirm your password" required>
-                            <i class="fas fa-eye password-toggle" onclick="togglePassword('password2')"></i>
-                        </div>
-                    </div>
-                    
-                    <!-- Display any form errors -->
-                    <div id="errorContainer" style="display: none;">
-                        <div class="alert-custom">
-                            <div id="errorText"></div>
-                        </div>
-                    </div>
+                <!-- Back to Login -->
+                <div class="back-to-login">
+                    <p>Already have an account? <a href="{% url 'login' %}">Sign in here</a></p>
                 </div>
-
-                <!-- Navigation -->
-                <div class="form-navigation">
-                    <button type="button" class="btn btn-secondary-step" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
-                        <i class="fas fa-arrow-left me-2"></i>Previous
-                    </button>
-                    <div></div>
-                    <button type="button" class="btn btn-primary-step" id="nextBtn" onclick="changeStep(1)">
-                        Next<i class="fas fa-arrow-right ms-2"></i>
-                    </button>
-                </div>
-            </form>
-            
-            <div class="back-to-login">
-                <p>Already have an account? <a href="#" onclick="alert('Login page link')">Login here</a></p>
             </div>
         </div>
     </div>
 
-
-
-
-
-
-
-
-
-
-
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Preloader
+        window.addEventListener('load', function() {
+            const preloader = document.getElementById('preloader');
+            setTimeout(() => {
+                preloader.style.opacity = '0';
+                setTimeout(() => {
+                    preloader.style.display = 'none';
+                }, 500);
+            }, 1000);
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Password toggle functionality
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const eyeIcon = document.getElementById(inputId + '-eye');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
+
     <script>
         let currentStep = 1;
         const totalSteps = 3;
@@ -585,14 +569,16 @@
             
             // Update navigation buttons
             document.getElementById('prevBtn').style.display = step === 1 ? 'none' : 'inline-block';
-            
+
             const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+
             if (step === totalSteps) {
-                nextBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account';
-                nextBtn.onclick = submitForm;
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
             } else {
-                nextBtn.innerHTML = 'Next<i class="fas fa-arrow-right ms-2"></i>';
-                nextBtn.onclick = () => changeStep(1);
+                nextBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
             }
         }
 
@@ -600,11 +586,16 @@
             if (direction === 1 && !validateCurrentStep()) {
                 return;
             }
-            
+
             const newStep = currentStep + direction;
             if (newStep >= 1 && newStep <= totalSteps) {
                 currentStep = newStep;
                 showStep(currentStep);
+
+                // Generate username when moving to step 3
+                if (currentStep === 3) {
+                    generateUsername();
+                }
             }
         }
 
@@ -655,17 +646,13 @@
             if (!validateCurrentStep()) {
                 return;
             }
-            
+
             const nextBtn = document.getElementById('nextBtn');
-            nextBtn.innerHTML = '<div class="loading"></div>Creating Account...';
+            nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
             nextBtn.disabled = true;
-            
-            // Simulate form submission
-            setTimeout(() => {
-                alert('Account created successfully!');
-                nextBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account';
-                nextBtn.disabled = false;
-            }, 2000);
+
+            // Submit the form
+            document.querySelector('form').submit();
         }
 
         function togglePassword(fieldId) {
@@ -683,6 +670,45 @@
             }
         }
 
+        function generateUsername() {
+            const matricNumber = document.getElementById('matric_number').value;
+            if (matricNumber) {
+                // Generate username from matric number (remove spaces and convert to lowercase)
+                const username = matricNumber.replace(/\s+/g, '').toLowerCase();
+                document.getElementById('username').value = username;
+            }
+        }
+
+        function handleSubmit() {
+            // Validate current step
+            if (!validateCurrentStep()) {
+                alert('Please fill in all required fields correctly.');
+                return false;
+            }
+
+            // Generate username one more time
+            generateUsername();
+
+            // Check if username is generated
+            const username = document.getElementById('username').value;
+            if (!username) {
+                alert('Please enter a matriculation number to generate username.');
+                return false;
+            }
+
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+            submitBtn.disabled = true;
+
+            // Submit the form
+            setTimeout(() => {
+                document.querySelector('form').submit();
+            }, 100);
+
+            return true;
+        }
+
         // Initialize
         showStep(1);
 
@@ -697,7 +723,44 @@
                 }
             });
         });
+
+        // Auto-generate username when matriculation number changes
+        document.getElementById('matric_number').addEventListener('input', function() {
+            generateUsername();
+        });
+
+        // Simple form validation on submit
+        document.querySelector('form').addEventListener('submit', function(e) {
+            console.log('Form submission attempted');
+
+            // Basic validation
+            const requiredFields = document.querySelectorAll('[required]');
+            let allValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    allValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!allValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
+                return false;
+            }
+
+            console.log('Form validation passed, submitting...');
+            return true;
+        });
     </script>
+
+
+
+        {% include 'components/footer.html' %}
+
 
 </body>
 </html>

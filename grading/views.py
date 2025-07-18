@@ -2470,11 +2470,10 @@ def landing_page(request):
 
 
 
+
 def student_signup(request):
-    """Multi-step student signup form"""
     if request.method == 'POST':
         try:
-            # Get form data
             full_name = request.POST.get('full_name')
             email = request.POST.get('email')
             phone = request.POST.get('phone')
@@ -2486,27 +2485,21 @@ def student_signup(request):
             password1 = request.POST.get('password1')
             password2 = request.POST.get('password2')
 
-            # Validation
             errors = {}
 
-            # Check if passwords match
             if password1 != password2:
                 errors['password'] = 'Passwords do not match'
 
-            # Check if username already exists
             if CustomUser.objects.filter(username=username).exists():
                 errors['username'] = 'Username already exists'
 
-            # Check if email already exists
             if CustomUser.objects.filter(email=email).exists():
                 errors['email'] = 'Email already exists'
 
-            # Check if matric number already exists
             if StudentProfile.objects.filter(matric_number=matric_number).exists():
-                errors['matric_number'] = 'Matriculation number already exists'
+                errors['matric_number'] = 'Matric number already exists'
 
             if errors:
-                # Return form with errors
                 context = {
                     'departments': Department.objects.all(),
                     'levels': Level.objects.all(),
@@ -2525,17 +2518,20 @@ def student_signup(request):
                 position='student'
             )
 
-            # Create student profile
-            student_profile = StudentProfile.objects.create(
-                user=user,
-                matric_number=matric_number,
-                department_id=department_id,
-                level_id=level_id,
-                semester_id=semester_id,
-                full_name=full_name,
-                phone=phone,
+            # Get related objects
+            department = Department.objects.get(id=department_id)
+            level = Level.objects.get(id=level_id)
+            semester = Semester.objects.get(id=semester_id)
 
-            )
+            # Update profile created by signal
+            student_profile = StudentProfile.objects.get(user=user)
+            student_profile.full_name = full_name
+            student_profile.phone = phone
+            student_profile.matric_number = matric_number
+            student_profile.department = department
+            student_profile.level = level
+            student_profile.semester = semester
+            student_profile.save()
 
             messages.success(request, 'Account created successfully! You can now login.')
             return redirect('login')
@@ -2543,7 +2539,6 @@ def student_signup(request):
         except Exception as e:
             messages.error(request, f'An error occurred during registration: {str(e)}')
 
-    # GET request - show form
     context = {
         'departments': Department.objects.all(),
         'levels': Level.objects.all(),
@@ -2551,3 +2546,5 @@ def student_signup(request):
         'entry_years': range(2020, timezone.now().year + 2),
     }
     return render(request, 'auth/student_signup.html', context)
+
+    

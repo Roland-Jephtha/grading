@@ -15,7 +15,7 @@
                                 <i class="fas fa-user-graduate"></i>
                                 <span>Student Portal</span>
                             </div>
-                            <h1 class="header-title">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+                            <h1 class="header-title">Welcome back, {{ user.first_name|default:profile.full_name }}!</h1>
                             <p class="header-subtitle">Track your academic journey and monitor your progress</p>
                         {% elif user.position == 'lecturer' %}
                             <div class="header-badge">
