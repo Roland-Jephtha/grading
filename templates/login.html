@@ -206,6 +206,8 @@
         @media (max-width: 768px) {
             .login-container {
                 margin: 20px;
+
+                margin-left: -0.2em
             }
 
             .login-header, .login-form, .back-to-signup {
@@ -229,7 +231,7 @@
     <!-- Main Content -->
     <div class="main-content">
         <div class="container">
-            <div class="login-container">
+            <div class="login-container" >
                 <!-- Header -->
                 <div class="login-header">
                     {% comment %} <img src="{% static 'img/pti.png' %}" alt="PTI Logo" class="login-logo"> {% endcomment %}
@@ -270,7 +272,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-login">
+                        <button type="submit" class="btn-login " style = "background: var(--gradient-primary);">
                             <i class="fas fa-sign-in-alt me-2"></i>Sign In
                         </button>
                     </form>

@@ -531,31 +531,57 @@ def department_grades_view(request):
 
 
 
+
+
+
+
+
+
+
+
+
+
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 @login_required
 def approve_course_grades(request, course_id):
     if request.method == 'POST':
         profile = HodProfile.objects.get(user=request.user)
         user_department = profile.department
 
-        # Debug: Check what grades we're trying to update
         grades_to_update = Grade.objects.filter(
             course_id=course_id,
             department=user_department,
             status='submitted'
         )
 
-        print(f"Attempting to approve {grades_to_update.count()} grades for course {course_id}")
-        print(f"User department: {user_department}")
-
-        # Update the grades individually to trigger signals
         updated_count = 0
+        notified_lecturers = set()
+
+        # Get all superusers' emails
+        admin_emails = list(User.objects.filter(is_superuser=True).values_list("email", flat=True))
+
         for grade in grades_to_update:
-            print(f"Approving grade: {grade.student.full_name} - {grade.course.code}")
             grade.status = 'approved'
-            grade.save()  # This will trigger the post_save signal
+            grade.save()
             updated_count += 1
 
-        print(f"Actually updated {updated_count} grades (signals triggered)")
+            lecturer = grade.lecturer  # assumed relation
+            if lecturer and lecturer.user.email and lecturer.user.email not in notified_lecturers:
+                recipients = [lecturer.user.email] + admin_emails  # notify lecturer + all superusers
+                send_mail(
+                    subject="Grades Approved",
+                    message=f"Dear {lecturer.user.get_full_name()},\n\n"
+                            f"The grades you submitted for {grade.course.title} "
+                            f"have been approved by the HOD of {user_department}.\n\n"
+                            f"Congratulations!",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=recipients,
+                    fail_silently=False,
+                )
+                notified_lecturers.add(lecturer.user.email)
 
         if updated_count > 0:
             course = Course.objects.get(id=course_id)
@@ -564,7 +590,8 @@ def approve_course_grades(request, course_id):
             messages.warning(request, 'No grades were found to approve for this course')
 
         return redirect('submitted_grades')
-    
+    return redirect('submitted_grades')
+
 
 
 @login_required
@@ -573,34 +600,173 @@ def disapprove_course_grades(request, course_id):
         profile = HodProfile.objects.get(user=request.user)
         user_department = profile.department
 
-        # Debug: Check what grades we're trying to update
         grades_to_update = Grade.objects.filter(
             course_id=course_id,
             department=user_department,
-            status='approved'
+            status='submitted'
         )
 
-        print(f"Attempting to disapprove {grades_to_update.count()} grades for course {course_id}")
-        print(f"User department: {user_department}")
-
-        # Update the grades individually to trigger signals
         updated_count = 0
+        notified_lecturers = set()
+
         for grade in grades_to_update:
-            print(f"Disapproving grade: {grade.student.full_name} - {grade.course.code}")
-            grade.status = 'submitted'
-            grade.save()  # This will trigger the post_save signal
+            grade.status = 'draft'
+            grade.save()
             updated_count += 1
 
-        print(f"Actually updated {updated_count} grades (signals triggered)")
+            lecturer = grade.lecturer  # assumed field in Grade model
+            if lecturer and lecturer.user.email and lecturer.user.email not in notified_lecturers:
+                send_mail(
+                    subject="Grades Disapproved",
+                    message=f"Dear {lecturer.user},\n\n"
+                            f"The grades you submitted for {grade.course.title} "
+                            f"have been disapproved by the HOD of {user_department}.\n\n"
+                            f"Please review and resubmit.",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[lecturer.user.email],
+                    fail_silently=False,
+                )
+                notified_lecturers.add(lecturer.user.email)
 
-        # Add success message
         if updated_count > 0:
             course = Course.objects.get(id=course_id)
             messages.success(request, f'Successfully disapproved {updated_count} grades for {course.title}')
         else:
-            messages.warning(request, 'No approved grades were found to disapprove for this course')
+            messages.warning(request, 'No submitted grades were found to disapprove for this course')
 
         return redirect('submitted_grades')
+    return redirect('submitted_grades')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# @login_required
+# def approve_course_grades(request, course_id):
+#     if request.method == 'POST':
+#         profile = HodProfile.objects.get(user=request.user)
+#         user_department = profile.department
+
+#         grades_to_update = Grade.objects.filter(
+#             course_id=course_id,
+#             department=user_department,
+#             status='submitted'
+#         )
+
+#         updated_count = 0
+#         for grade in grades_to_update:
+#             grade.status = 'approved'
+#             grade.save()
+#             updated_count += 1
+
+#         if updated_count > 0:
+#             course = Course.objects.get(id=course_id)
+#             messages.success(request, f'Successfully approved {updated_count} grades for {course.title}')
+#         else:
+#             messages.warning(request, 'No grades were found to approve for this course')
+
+#         return redirect('submitted_grades')
+
+#     # 👇 Handle GET request (so it doesn’t return None)
+#     return redirect('submitted_grades')
+
+
+    
+
+
+
+
+
+# @login_required
+# def disapprove_course_grades(request, course_id):
+#     if request.method == 'POST':
+#         profile = HodProfile.objects.get(user=request.user)
+#         user_department = profile.department
+
+#         # Debug: Check what grades we're trying to update
+#         grades_to_update = Grade.objects.filter(
+#             course_id=course_id,
+#             department=user_department,
+#             status='submitted'
+#         )
+
+#         print(f"Attempting to disapprove {grades_to_update.count()} grades for course {course_id}")
+#         print(f"User department: {user_department}")
+
+#         # Update the grades individually to trigger signals
+#         updated_count = 0
+#         for grade in grades_to_update:
+#             print(f"Disapproving grade: {grade.student.full_name} - {grade.course.code}")
+#             grade.status = 'draft'
+#             grade.save()  # This will trigger the post_save signal
+#             updated_count += 1
+
+#         print(f"Actually updated {updated_count} grades (signals triggered)")
+
+#         # Add success message
+#         if updated_count > 0:
+#             course = Course.objects.get(id=course_id)
+#             messages.success(request, f'Successfully disapproved {updated_count} grades for {course.title}')
+#         else:
+#             messages.warning(request, 'No approved grades were found to disapprove for this course')
+
+#         return redirect('submitted_grades')
+
+
+
+
+
+
+
+
+
+
+# @login_required
+# def disapprove_course_grades(request, course_id):
+#     if request.method == 'POST':
+#         profile = HodProfile.objects.get(user=request.user)
+#         user_department = profile.department
+
+#         # Debug: Check what grades we're trying to update
+#         grades_to_update = Grade.objects.filter(
+#             course_id=course_id,
+#             department=user_department,
+#             status='approved'
+#         )
+
+#         print(f"Attempting to disapprove {grades_to_update.count()} grades for course {course_id}")
+#         print(f"User department: {user_department}")
+
+#         # Update the grades individually to trigger signals
+#         updated_count = 0
+#         for grade in grades_to_update:
+#             print(f"Disapproving grade: {grade.student.full_name} - {grade.course.code}")
+#             grade.status = 'submitted'
+#             grade.save()  # This will trigger the post_save signal
+#             updated_count += 1
+
+#         print(f"Actually updated {updated_count} grades (signals triggered)")
+
+#         # Add success message
+#         if updated_count > 0:
+#             course = Course.objects.get(id=course_id)
+#             messages.success(request, f'Successfully disapproved {updated_count} grades for {course.title}')
+#         else:
+#             messages.warning(request, 'No approved grades were found to disapprove for this course')
+
+#         return redirect('submitted_grades')
 
 
 
@@ -2469,11 +2635,11 @@ def landing_page(request):
 
 
 
-
-
 def student_signup(request):
+    """Multi-step student signup form"""
     if request.method == 'POST':
         try:
+            # Get form data
             full_name = request.POST.get('full_name')
             email = request.POST.get('email')
             phone = request.POST.get('phone')
@@ -2485,19 +2651,16 @@ def student_signup(request):
             password1 = request.POST.get('password1')
             password2 = request.POST.get('password2')
 
+            # Validation
             errors = {}
-
             if password1 != password2:
                 errors['password'] = 'Passwords do not match'
-
             if CustomUser.objects.filter(username=username).exists():
                 errors['username'] = 'Username already exists'
-
             if CustomUser.objects.filter(email=email).exists():
                 errors['email'] = 'Email already exists'
-
             if StudentProfile.objects.filter(matric_number=matric_number).exists():
-                errors['matric_number'] = 'Matric number already exists'
+                errors['matric_number'] = 'Matriculation number already exists'
 
             if errors:
                 context = {
@@ -2510,15 +2673,16 @@ def student_signup(request):
                 }
                 return render(request, 'auth/student_signup.html', context)
 
-            # Create user
+            # Create user (inactive until admin approves)
             user = CustomUser.objects.create_user(
                 username=username,
                 email=email,
                 password=password1,
-                position='student'
+                position='student',
+                is_active=False
             )
 
-            # Get related objects
+         # Get related objects
             department = Department.objects.get(id=department_id)
             level = Level.objects.get(id=level_id)
             semester = Semester.objects.get(id=semester_id)
@@ -2533,12 +2697,39 @@ def student_signup(request):
             student_profile.semester = semester
             student_profile.save()
 
-            messages.success(request, 'Account created successfully! You can now login.')
+
+
+            # Send pending approval email
+            subject = "Your Student Account Registration is Pending Approval"
+            message = f"""
+Dear {full_name},
+
+Thank you for registering with our platform.
+
+Your account has been created successfully, but it is currently pending administrator approval. 
+⚠️ Please note: You will NOT be able to log in until your account has been reviewed and approved.  
+
+Once approved, you will receive another email confirming that your account is active and you can then log in.
+
+We appreciate your patience.
+
+Best regards,  
+PTI Grading System
+"""
+            send_mail(subject, message, settings.EMAIL_HOST_USER, [email], fail_silently=True)
+
+            # SweetAlert message
+            messages.success(
+                request,
+                'Registration successful! Your account is pending administrator approval. '
+                '⚠️ You cannot log in until approval is granted.'
+            )
             return redirect('login')
 
         except Exception as e:
             messages.error(request, f'An error occurred during registration: {str(e)}')
 
+    # GET request - show form
     context = {
         'departments': Department.objects.all(),
         'levels': Level.objects.all(),
@@ -2546,5 +2737,3 @@ def student_signup(request):
         'entry_years': range(2020, timezone.now().year + 2),
     }
     return render(request, 'auth/student_signup.html', context)
-
-    

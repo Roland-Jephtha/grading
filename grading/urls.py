@@ -11,6 +11,8 @@ urlpatterns = [
     path('submit-grades/', submit_grades, name='submit_grades'),
     path('hod/submitted-grades/', department_grades_view, name='submitted_grades'),
     path('department/approve/<int:course_id>/', approve_course_grades, name='approve_course_grades'),
+    path('grades/<int:course_id>/disapprove/', disapprove_course_grades, name='disapprove_course_grades'),
+
 
     # Result URLs
     path('department/results/', student_results_view, name='student_results_view'),

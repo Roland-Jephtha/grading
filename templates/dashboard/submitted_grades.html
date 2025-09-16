@@ -387,32 +387,178 @@
 
                         // Configure button based on grade status
                         if (hasSubmittedGrades && !hasApprovedGrades) {
-                            // All grades are submitted - show approve button
-                            toggleForm.action = `/department/approve/${courseData.id}/`;
-                            toggleBtn.className = 'btn btn-success btn-sm px-3';
-                            toggleIcon.className = 'fa fa-check-circle me-1';
-                            toggleText.textContent = 'Approve All Grades';
+                            // All grades are submitted - show both buttons side by side
+                            toggleForm.innerHTML = '';
+                            toggleForm.className = 'd-inline-flex';
 
-                            toggleBtn.onclick = function(e) {
-                                console.log('Approve button clicked for course:', courseData.title);
-                                return confirm(`Are you sure you want to approve all grades for ${courseData.title}?`);
+                            // Create approve button
+                            const approveBtn = document.createElement('button');
+                            approveBtn.className = 'btn btn-success btn-sm px-3 me-2';
+                            approveBtn.innerHTML = '<i class="fa fa-check-circle me-1"></i>Approve All';
+                            approveBtn.onclick = function(e) {
+                                e.preventDefault();
+                                const approveForm = document.createElement('form');
+                                approveForm.method = 'post';
+                                approveForm.action = `/department/approve/${courseData.id}/`;
+                                // Add CSRF token from cookie
+                                const csrfInput = document.createElement('input');
+                                csrfInput.type = 'hidden';
+                                csrfInput.name = 'csrfmiddlewaretoken';
+                                csrfInput.value = (function getCookie(name) {
+                                    let cookieValue = null;
+                                    if (document.cookie && document.cookie !== '') {
+                                        const cookies = document.cookie.split(';');
+                                        for (let i = 0; i < cookies.length; i++) {
+                                            const cookie = cookies[i].trim();
+                                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    return cookieValue;
+                                })('csrftoken');
+                                approveForm.appendChild(csrfInput);
+
+                                if (confirm(`Are you sure you want to approve all grades for ${courseData.title}?`)) {
+                                    document.body.appendChild(approveForm);
+                                    approveForm.submit();
+                                }
                             };
+
+                            // Create disapprove button
+                            const disapproveBtn = document.createElement('button');
+                            disapproveBtn.className = 'btn btn-danger btn-sm px-3';
+                            disapproveBtn.innerHTML = '<i class="fa fa-times-circle me-1"></i>Disapprove All';
+                            disapproveBtn.onclick = function(e) {
+                                e.preventDefault();
+                                const disapproveForm = document.createElement('form');
+                                disapproveForm.method = 'post';
+                                disapproveForm.action = `/grades/${courseData.id}/disapprove/`;
+                                // Add CSRF token from cookie
+                                const csrfInput2 = document.createElement('input');
+                                csrfInput2.type = 'hidden';
+                                csrfInput2.name = 'csrfmiddlewaretoken';
+                                csrfInput2.value = (function getCookie(name) {
+                                    let cookieValue = null;
+                                    if (document.cookie && document.cookie !== '') {
+                                        const cookies = document.cookie.split(';');
+                                        for (let i = 0; i < cookies.length; i++) {
+                                            const cookie = cookies[i].trim();
+                                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    return cookieValue;
+                                })('csrftoken');
+                                disapproveForm.appendChild(csrfInput2);
+
+                                if (confirm(`Are you sure you want to disapprove all grades for ${courseData.title}? This will return all grades to draft status.`)) {
+                                    document.body.appendChild(disapproveForm);
+                                    disapproveForm.submit();
+                                }
+                            };
+
+                            // Add both buttons to the form
+                            toggleForm.appendChild(approveBtn);
+                            toggleForm.appendChild(disapproveBtn);
                         } else if (hasApprovedGrades && !hasSubmittedGrades) {
-                            // All grades are already approved - show status only
-                            toggleBtn.className = 'btn btn-outline-success btn-sm px-3';
-                            toggleBtn.disabled = true;
-                            toggleIcon.className = 'fa fa-check-circle me-1';
-                            toggleText.textContent = 'All Approved';
-                        } else if (hasSubmittedGrades && hasApprovedGrades) {
-                            // Mixed status - default to approve remaining
-                            toggleForm.action = `/department/approve/${courseData.id}/`;
-                            toggleBtn.className = 'btn btn-success btn-sm px-3';
-                            toggleIcon.className = 'fa fa-check-circle me-1';
-                            toggleText.textContent = 'Approve Remaining';
+                            // All grades are already approved - show both buttons side by side but disabled
+                            toggleForm.innerHTML = '';
+                            toggleForm.className = 'd-inline-flex';
 
-                            toggleBtn.onclick = function(e) {
-                                return confirm(`Approve remaining submitted grades for ${courseData.title}?`);
+                            // Create approve button (disabled)
+                            const approveBtn = document.createElement('button');
+                            approveBtn.className = 'btn btn-outline-success btn-sm px-3 me-2';
+                            approveBtn.disabled = true;
+                            approveBtn.innerHTML = '<i class="fa fa-check-circle me-1"></i>All Approved';
+
+                            // Create disapprove button (disabled)
+                            const disapproveBtn = document.createElement('button');
+                            disapproveBtn.className = 'btn btn-outline-danger btn-sm px-3';
+                            disapproveBtn.disabled = true;
+                            disapproveBtn.innerHTML = '<i class="fa fa-times-circle me-1"></i>All DisApproved';
+
+                            // Add both buttons to the form
+                            toggleForm.appendChild(approveBtn);
+                            toggleForm.appendChild(disapproveBtn);
+                        } else if (hasSubmittedGrades && hasApprovedGrades) {
+                            // Mixed status - show both approve and disapprove options
+                            // Create approve button
+                            const approveBtn = document.createElement('button');
+                            approveBtn.className = 'btn btn-success btn-sm px-3 me-2';
+                            approveBtn.innerHTML = '<i class="fa fa-check-circle me-1"></i>Approve Remaining';
+                            approveBtn.onclick = function(e) {
+                                e.preventDefault();
+                                const approveForm = document.createElement('form');
+                                approveForm.method = 'post';
+                                approveForm.action = `/department/approve/${courseData.id}/`;
+                                // Add CSRF token from cookie
+                                const csrfInput = document.createElement('input');
+                                csrfInput.type = 'hidden';
+                                csrfInput.name = 'csrfmiddlewaretoken';
+                                csrfInput.value = (function getCookie(name) {
+                                    let cookieValue = null;
+                                    if (document.cookie && document.cookie !== '') {
+                                        const cookies = document.cookie.split(';');
+                                        for (let i = 0; i < cookies.length; i++) {
+                                            const cookie = cookies[i].trim();
+                                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    return cookieValue;
+                                })('csrftoken');
+                                approveForm.appendChild(csrfInput);
+                                if (confirm(`Approve remaining submitted grades for ${courseData.title}?`)) {
+                                    document.body.appendChild(approveForm);
+                                    approveForm.submit();
+                                }
                             };
+
+                            // Create disapprove button
+                            const disapproveBtn = document.createElement('button');
+                            disapproveBtn.className = 'btn btn-danger btn-sm px-3';
+                            disapproveBtn.innerHTML = '<i class="fa fa-times-circle me-1"></i>Disapprove All';
+                            disapproveBtn.onclick = function(e) {
+                                e.preventDefault();
+                                const disapproveForm = document.createElement('form');
+                                disapproveForm.method = 'post';
+                                disapproveForm.action = `/grades/${courseData.id}/disapprove/`;
+                                // Add CSRF token from cookie
+                                const csrfInput2 = document.createElement('input');
+                                csrfInput2.type = 'hidden';
+                                csrfInput2.name = 'csrfmiddlewaretoken';
+                                csrfInput2.value = (function getCookie(name) {
+                                    let cookieValue = null;
+                                    if (document.cookie && document.cookie !== '') {
+                                        const cookies = document.cookie.split(';');
+                                        for (let i = 0; i < cookies.length; i++) {
+                                            const cookie = cookies[i].trim();
+                                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    return cookieValue;
+                                })('csrftoken');
+                                disapproveForm.appendChild(csrfInput2);
+                                if (confirm(`Are you sure you want to disapprove all grades for ${courseData.title}? This will return grades to draft status.`)) {
+                                    document.body.appendChild(disapproveForm);
+                                    disapproveForm.submit();
+                                }
+                            };
+
+                            // Replace the single toggle button with both buttons
+                            toggleForm.innerHTML = '';
+                            toggleForm.appendChild(approveBtn);
+                            toggleForm.appendChild(disapproveBtn);
+                            toggleForm.className = 'd-inline-flex';
                         } else {
                             // No grades to process
                             toggleBtn.className = 'btn btn-secondary btn-sm px-3';

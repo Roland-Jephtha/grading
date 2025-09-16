@@ -17,7 +17,7 @@ class CustomUser(AbstractUser):
         ("admin", "Lecturer")
     ]
     email = models.EmailField(unique=True, null=True)
-    username =  models.CharField(max_length=15, blank=True, null=True)
+    username =  models.CharField(max_length=30, blank=True, null=True)
 
 
     position = models.CharField(
@@ -779,3 +779,53 @@ class Cummulative_Result(models.Model):
 
 
 
+
+
+
+
+from django.db.models.signals import post_save, pre_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import CustomUser
+
+
+@receiver(pre_save, sender=CustomUser)
+def track_old_is_active(sender, instance, **kwargs):
+    """Track the previous is_active value before saving."""
+    if instance.pk:  # Only for existing users
+        try:
+            old_instance = sender.objects.get(pk=instance.pk)
+            instance._old_is_active = old_instance.is_active
+        except sender.DoesNotExist:
+            instance._old_is_active = None
+
+
+@receiver(post_save, sender=CustomUser)
+def send_activation_email(sender, instance, created, **kwargs):
+    """Send email when a user account is approved (is_active changes from False -> True)."""
+    if not created:  # Only for updates
+        old_is_active = getattr(instance, "_old_is_active", None)
+
+        if old_is_active is False and instance.is_active is True:
+            subject = "Your Student Account Has Been Approved"
+            message = f"""
+Dear {instance.get_full_name() or instance.username},
+
+Good news! 🎉  
+
+Your account has been reviewed and approved by the administrator.  
+✅ You can now log in using your registered username and password.  
+
+Go to our platform and log in.  
+
+Best regards,  
+PTI Grading System
+"""
+            send_mail(
+                subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [instance.email],
+                fail_silently=True,  # <-- better to set to False so you see errors
+            )
